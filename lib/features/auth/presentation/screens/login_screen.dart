@@ -1,0 +1,180 @@
+import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
+import 'package:algon_mobile/src/res/styles.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
+import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
+
+@RoutePage(name: 'Login')
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailOrNinController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String _selectedLoginType = 'Applicant';
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailOrNinController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Gradient background
+          Container(
+            decoration:
+                const BoxDecoration(gradient: AppColors.primaryGradient),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                const Icon(
+                  Icons.flag,
+                  size: 64,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Welcome Back',
+                  style: AppStyles.textStyle.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sign in to continue',
+                  style: AppStyles.textStyle.copyWith(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Form card
+                Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(30),
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        children: [
+                          CustomDropdownField<String>(
+                            label: 'Login As',
+                            value: _selectedLoginType,
+                            items: const ['Applicant', 'Admin'],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedLoginType = value!;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: _emailOrNinController,
+                            label: 'Email or NIN',
+                            hint: 'Enter your email or NIN',
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            hint: 'Enter your password',
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                // TODO: Navigate to forgot password
+                              },
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: Color(0xFF0D9488),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const ColSpacing(32),
+                          CustomButton(
+                            text: 'Login',
+                            onPressed: () {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                // TODO: Implement login logic
+                                context.router.pushNamed('/home');
+                              }
+                            },
+                          ),
+                          const ColSpacing(16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account? ",
+                                style: TextStyle(
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  context.router.pushNamed('/signup');
+                                },
+                                child: const Text(
+                                  'Sign Up',
+                                  style: TextStyle(
+                                    color: Color(0xFF0D9488),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
