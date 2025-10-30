@@ -1,3 +1,4 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
@@ -19,17 +20,16 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with gradient
             Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
               ),
-              padding: const EdgeInsets.all(24),
-              child: const Row(
+              padding: const EdgeInsets.all(15),
+              child: Row(
                 children: [
                   Text(
                     'LGCIVS',
-                    style: TextStyle(
+                    style: AppStyles.textStyle.copyWith(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -40,22 +40,24 @@ class HomeScreen extends StatelessWidget {
             ),
             // Welcome message
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Welcome, John',
                     style: AppStyles.textStyle.copyWith(
-                      fontSize: 24,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     'Manage your certificates',
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.greyDark,
                     ),
                   ),
                 ],
@@ -64,16 +66,15 @@ class HomeScreen extends StatelessWidget {
             // Main content
             const Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 15),
                 child: Column(
                   children: [
                     ApplyCard(),
-                    SizedBox(height: 16),
+                    ColSpacing(16),
                     DigitizeCard(),
-                    SizedBox(height: 24),
+                    ColSpacing(24),
                     QuickActions(),
-                    SizedBox(height: 24),
-                    // Recent Applications
+                    ColSpacing(24),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(

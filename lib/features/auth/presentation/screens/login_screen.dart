@@ -1,3 +1,4 @@
+import 'package:algon_mobile/core/enums/user_role.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailOrNinController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedLoginType = 'Applicant';
+  UserRole? _selectedLoginType;
   bool _obscurePassword = true;
 
   @override
@@ -43,10 +44,18 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                const Icon(
-                  Icons.flag,
-                  size: 64,
-                  color: Colors.white,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.asset(
+                    'assets/images/nigeria-flag.png',
+                    height: 50,
+                    width: 100,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -80,13 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       key: _formKey,
                       child: ListView(
                         children: [
-                          CustomDropdownField<String>(
+                          CustomDropdownField<UserRole>(
                             label: 'Login As',
-                            value: _selectedLoginType,
-                            items: const ['Applicant', 'Admin'],
+                            value: _selectedLoginType ?? UserRole.applicant,
+                            items: UserRole.values,
+                            itemBuilder: (role) => role.label,
                             onChanged: (value) {
                               setState(() {
-                                _selectedLoginType = value!;
+                                _selectedLoginType = value;
                               });
                             },
                           ),

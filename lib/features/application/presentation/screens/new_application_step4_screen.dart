@@ -1,3 +1,5 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
@@ -12,6 +14,7 @@ class NewApplicationStep4Screen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const StepHeader(
               title: 'New Application',
@@ -62,17 +65,18 @@ class NewApplicationStep4Screen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E3),
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.green[100]!.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: const Color(0xFF90E8A7),
-                            width: 1,
+                            color: Colors.green[500]!.withOpacity(0.5),
+                            width: 2,
                           ),
                         ),
                         child: const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
-                              Icons.check_circle,
+                              Icons.check_circle_outline_rounded,
                               color: Color(0xFF065F46),
                               size: 24,
                             ),
@@ -82,7 +86,7 @@ class NewApplicationStep4Screen extends StatelessWidget {
                                 'By submitting this application, you confirm that all information provided is accurate and truthful.',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Color(0xFF1F2937),
+                                  color: AppColors.blackColor,
                                 ),
                               ),
                             ),
@@ -95,7 +99,7 @@ class NewApplicationStep4Screen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: Row(
                 children: [
                   Expanded(
@@ -105,7 +109,7 @@ class NewApplicationStep4Screen extends StatelessWidget {
                       onPressed: () => context.router.maybePop(),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const RowSpacing(16),
                   Expanded(
                     child: CustomButton(
                       text: 'Submit Application',
@@ -136,10 +140,11 @@ class _ReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E3),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.green[100]!.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,20 +152,20 @@ class _ReviewCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              color: AppColors.blackColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const ColSpacing(8),
           ...items.map((item) => Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   item,
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black54,
                   ),
                 ),
               )),

@@ -1,3 +1,5 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
@@ -23,38 +25,52 @@ class ApplyCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Apply for Certificate',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Start a new indigene certificate application',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Apply for Certificate',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Start a new indigene certificate application',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    RowSpacing(16),
+                    Icon(Icons.description, size: 40, color: Colors.white30),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 CustomButton(
                   text: 'New Application',
                   iconData: Icons.add,
-                  variant: ButtonVariant.secondary,
+               
+                  borderRadius: 30,
                   onPressed: () {
                     context.router.pushNamed('/application/step1');
                   },
-                  backgroundColor: const Color(0xFFE8F5E3),
-                  textColor: const Color(0xFF065F46),
+                  backgroundColor: AppColors.gradientEnd,
+                  textColor: AppColors.blackColor,
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          const Icon(Icons.description, size: 80, color: Colors.white30),
         ],
       ),
     );

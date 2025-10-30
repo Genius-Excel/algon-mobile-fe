@@ -1,3 +1,5 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -46,7 +48,8 @@ class _NewApplicationStep2ScreenState extends State<NewApplicationStep2Screen> {
               child: Container(
                 color: Colors.white,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -55,65 +58,58 @@ class _NewApplicationStep2ScreenState extends State<NewApplicationStep2Screen> {
                         const Text(
                           'Contact Information',
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.blackColor,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const ColSpacing(16),
                         CustomTextField(
                           controller: _emailController,
                           label: 'Email Address',
                           hint: 'your.email@example.com',
                           keyboardType: TextInputType.emailAddress,
                         ),
-                        const SizedBox(height: 16),
+                        const ColSpacing(16),
                         CustomTextField(
                           controller: _phoneController,
                           label: 'Phone Number',
                           hint: '+234 800 000 0000',
                           keyboardType: TextInputType.phone,
                         ),
-                        const SizedBox(height: 32),
-                        const Text(
-                          'Residential Address',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                        const ColSpacing(16),
                         CustomTextField(
                           controller: _addressController,
                           label: 'Residential Address',
                           hint: 'Full address in the local government',
                         ),
-                        const SizedBox(height: 16),
+                        const ColSpacing(16),
                         CustomTextField(
                           controller: _landmarkController,
                           label: 'Nearest Landmark',
                           hint: 'E.g., Next to primary school',
                         ),
-                        const SizedBox(height: 32),
+                        const ColSpacing(16),
                         const Text(
                           'Upload Supporting Letter',
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.blackColor,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const ColSpacing(16),
                         GestureDetector(
                           onTap: _pickFile,
                           child: Container(
-                            padding: const EdgeInsets.all(40),
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 12),
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: Colors.grey[300]!,
                                 style: BorderStyle.solid,
-                                width: 2,
+                                width: 0.5,
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -146,12 +142,6 @@ class _NewApplicationStep2ScreenState extends State<NewApplicationStep2Screen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        CustomButton(
-                          text: 'Choose File',
-                          variant: ButtonVariant.outline,
-                          onPressed: _pickFile,
-                        ),
                       ],
                     ),
                   ),
@@ -159,7 +149,7 @@ class _NewApplicationStep2ScreenState extends State<NewApplicationStep2Screen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: Row(
                 children: [
                   Expanded(

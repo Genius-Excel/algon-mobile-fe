@@ -55,7 +55,8 @@ class _NewApplicationStep1ScreenState extends State<NewApplicationStep1Screen> {
               child: Container(
                 color: Colors.white,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -142,7 +143,7 @@ class _NewApplicationStep1ScreenState extends State<NewApplicationStep1Screen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: CustomButton(
                 text: 'Next',
                 iconData: Icons.arrow_forward,

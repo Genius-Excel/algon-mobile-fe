@@ -15,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 800), () {
+    Future<void>.delayed(const Duration(milliseconds: 2000), () {
       if (!mounted) return;
       context.router.replace(const FirstOnboarding());
     });
@@ -66,27 +66,18 @@ class _FlagBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Container(
-          width: 60,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Image.asset(
-            'assets/images/nigeria-flag.jpg',
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
-          ),
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
+        child: Image.asset(
+          'assets/images/nigeria-flag.png',
+          width: 70,
+          height: 50,
+          fit: BoxFit.cover,
         ),
       ),
     );

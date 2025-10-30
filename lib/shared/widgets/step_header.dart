@@ -1,3 +1,4 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
@@ -18,15 +19,16 @@ class StepHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 24),
       child: SafeArea(
         bottom: false,
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => context.router.maybePop(),
+            GestureDetector(
+              onTap: () => context.router.maybePop(),
+              child: const Icon(Icons.arrow_back, color: Colors.white),
             ),
+            const RowSpacing(16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

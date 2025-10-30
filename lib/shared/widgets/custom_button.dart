@@ -17,6 +17,7 @@ class CustomButton extends StatelessWidget {
   final Color? textColor;
   final double fontSize;
   final FontWeight fontWeight;
+  final double? borderRadius;
 
   const CustomButton({
     super.key,
@@ -34,6 +35,7 @@ class CustomButton extends StatelessWidget {
     this.textColor,
     this.fontSize = 16,
     this.fontWeight = FontWeight.bold,
+    this.borderRadius,
   });
 
   @override
@@ -97,7 +99,7 @@ class CustomButton extends StatelessWidget {
           backgroundColor: backgroundColor ?? const Color(0xFF0D9488),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
           elevation: 0,
         );
@@ -106,7 +108,7 @@ class CustomButton extends StatelessWidget {
           backgroundColor: backgroundColor ?? const Color(0xFF10B981),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
           elevation: 0,
         );
@@ -116,7 +118,7 @@ class CustomButton extends StatelessWidget {
           foregroundColor: textColor ?? const Color(0xFF0D9488),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius ?? 12),
             side: BorderSide(
               color: backgroundColor ?? const Color(0xFF0D9488),
               width: 2,
@@ -129,7 +131,7 @@ class CustomButton extends StatelessWidget {
           foregroundColor: textColor ?? const Color(0xFF0D9488),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
         );
     }

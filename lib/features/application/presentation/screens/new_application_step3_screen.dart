@@ -1,3 +1,5 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
@@ -30,41 +32,46 @@ class _NewApplicationStep3ScreenState extends State<NewApplicationStep3Screen> {
               child: Container(
                 color: Colors.white,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Payment',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.blackColor,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const ColSpacing(16),
                       Container(
-                        padding: const EdgeInsets.all(20),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE8F5E3),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               'Application Fee',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Color(0xFF6B7280),
+                                color: AppColors.greyDark,
                               ),
                             ),
+                            ColSpacing(16),
                             Text(
                               '₦5,000',
                               style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1F2937),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.blackColor,
                               ),
                             ),
                           ],
@@ -99,8 +106,8 @@ class _NewApplicationStep3ScreenState extends State<NewApplicationStep3Screen> {
                         child: Text(
                           'Your payment is secure and encrypted',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF6B7280),
+                            fontSize: 13,
+                            color: AppColors.greyDark,
                           ),
                         ),
                       ),
@@ -176,12 +183,12 @@ class _PaymentOption extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber[100],
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.green[100]!.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: Colors.amber[900], size: 24),
+              child: Icon(icon, color: Colors.green[900], size: 24),
             ),
-            const SizedBox(width: 16),
+            const RowSpacing(16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +197,7 @@ class _PaymentOption extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: Color(0xFF1F2937),
                     ),
                   ),
@@ -199,7 +206,7 @@ class _PaymentOption extends StatelessWidget {
                     subtitle,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF6B7280),
+                      color: AppColors.greyDark,
                     ),
                   ),
                 ],
