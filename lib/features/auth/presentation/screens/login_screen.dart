@@ -147,7 +147,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
                                 // TODO: Implement login logic
-                                context.router.pushNamed('/home');
+                                // Navigate based on user role
+                                final role =
+                                    _selectedLoginType ?? UserRole.applicant;
+                                if (role == UserRole.lgAdmin ||
+                                    role == UserRole.superAdmin) {
+                                  context.router.pushNamed('/admin/dashboard');
+                                } else {
+                                  context.router.pushNamed('/home');
+                                }
                               }
                             },
                           ),

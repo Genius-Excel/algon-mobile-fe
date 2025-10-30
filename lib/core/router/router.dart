@@ -1,5 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 
+import '../../features/admin/presentation/screens/admin_application_detail_screen.dart';
+import '../../features/admin/presentation/screens/admin_applications_screen.dart';
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/screens/admin_reports_screen.dart';
+import '../../features/admin/presentation/screens/admin_settings_screen.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/application/presentation/screens/new_application_step1_screen.dart';
 import '../../features/application/presentation/screens/new_application_step2_screen.dart';
@@ -53,6 +58,28 @@ class HelperrRouter extends RootStackRouter {
         AutoRoute(
           page: NewApplicationStep4.page,
           path: '/application/step4',
+        ),
+
+        // LG Admin routes
+        AutoRoute(
+          page: AdminDashboard.page,
+          path: '/admin/dashboard',
+        ),
+        AutoRoute(
+          page: AdminApplications.page,
+          path: '/admin/applications',
+        ),
+        AutoRoute(
+          page: AdminApplicationDetail.page,
+          path: '/admin/application/detail',
+        ),
+        AutoRoute(
+          page: AdminReports.page,
+          path: '/admin/reports',
+        ),
+        AutoRoute(
+          page: AdminSettings.page,
+          path: '/admin/settings',
         ),
       ];
 }

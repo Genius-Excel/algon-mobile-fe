@@ -10,6 +10,101 @@
 part of 'router.dart';
 
 /// generated route for
+/// [AdminApplicationDetailScreen]
+class AdminApplicationDetail extends PageRouteInfo<void> {
+  const AdminApplicationDetail({List<PageRouteInfo>? children})
+      : super(
+          AdminApplicationDetail.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AdminApplicationDetail';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminApplicationDetailScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminApplicationsScreen]
+class AdminApplications extends PageRouteInfo<void> {
+  const AdminApplications({List<PageRouteInfo>? children})
+      : super(
+          AdminApplications.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AdminApplications';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminApplicationsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminDashboardScreen]
+class AdminDashboard extends PageRouteInfo<void> {
+  const AdminDashboard({List<PageRouteInfo>? children})
+      : super(
+          AdminDashboard.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AdminDashboard';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminDashboardScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminReportsScreen]
+class AdminReports extends PageRouteInfo<void> {
+  const AdminReports({List<PageRouteInfo>? children})
+      : super(
+          AdminReports.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AdminReports';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminReportsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminSettingsScreen]
+class AdminSettings extends PageRouteInfo<void> {
+  const AdminSettings({List<PageRouteInfo>? children})
+      : super(
+          AdminSettings.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AdminSettings';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminSettingsScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [AlertsScreen]
 class Alerts extends PageRouteInfo<void> {
   const Alerts({List<PageRouteInfo>? children})
