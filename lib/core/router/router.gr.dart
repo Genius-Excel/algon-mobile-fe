@@ -87,10 +87,17 @@ class AdminReports extends PageRouteInfo<void> {
 
 /// generated route for
 /// [AdminSettingsScreen]
-class AdminSettings extends PageRouteInfo<void> {
-  const AdminSettings({List<PageRouteInfo>? children})
-      : super(
+class AdminSettings extends PageRouteInfo<AdminSettingsArgs> {
+  AdminSettings({
+    Key? key,
+    bool isSuperAdmin = false,
+    List<PageRouteInfo>? children,
+  }) : super(
           AdminSettings.name,
+          args: AdminSettingsArgs(
+            key: key,
+            isSuperAdmin: isSuperAdmin,
+          ),
           initialChildren: children,
         );
 
@@ -99,9 +106,30 @@ class AdminSettings extends PageRouteInfo<void> {
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const AdminSettingsScreen();
+      final args = data.argsAs<AdminSettingsArgs>(
+          orElse: () => const AdminSettingsArgs());
+      return AdminSettingsScreen(
+        key: args.key,
+        isSuperAdmin: args.isSuperAdmin,
+      );
     },
   );
+}
+
+class AdminSettingsArgs {
+  const AdminSettingsArgs({
+    this.key,
+    this.isSuperAdmin = false,
+  });
+
+  final Key? key;
+
+  final bool isSuperAdmin;
+
+  @override
+  String toString() {
+    return 'AdminSettingsArgs{key: $key, isSuperAdmin: $isSuperAdmin}';
+  }
 }
 
 /// generated route for
@@ -119,6 +147,25 @@ class Alerts extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const AlertsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AuditLogScreen]
+class AuditLog extends PageRouteInfo<void> {
+  const AuditLog({List<PageRouteInfo>? children})
+      : super(
+          AuditLog.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'AuditLog';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AuditLogScreen();
     },
   );
 }
@@ -252,6 +299,25 @@ class Login extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const LoginScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [ManageLGAdminsScreen]
+class ManageLGAdmins extends PageRouteInfo<void> {
+  const ManageLGAdmins({List<PageRouteInfo>? children})
+      : super(
+          ManageLGAdmins.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'ManageLGAdmins';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ManageLGAdminsScreen();
     },
   );
 }
@@ -404,6 +470,44 @@ class Splash extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const SplashScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [SuperAdminDashboardScreen]
+class SuperAdminDashboard extends PageRouteInfo<void> {
+  const SuperAdminDashboard({List<PageRouteInfo>? children})
+      : super(
+          SuperAdminDashboard.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'SuperAdminDashboard';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SuperAdminDashboardScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [SystemSettingsScreen]
+class SystemSettings extends PageRouteInfo<void> {
+  const SystemSettings({List<PageRouteInfo>? children})
+      : super(
+          SystemSettings.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'SystemSettings';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SystemSettingsScreen();
     },
   );
 }

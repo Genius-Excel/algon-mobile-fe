@@ -1,10 +1,12 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 
 import '../../features/admin/presentation/screens/admin_application_detail_screen.dart';
 import '../../features/admin/presentation/screens/admin_applications_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/screens/admin_reports_screen.dart';
 import '../../features/admin/presentation/screens/admin_settings_screen.dart';
+import '../../features/super_admin/presentation/screens/super_admin_screens.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/application/presentation/screens/new_application_step1_screen.dart';
 import '../../features/application/presentation/screens/new_application_step2_screen.dart';
@@ -52,5 +54,11 @@ class HelperrRouter extends RootStackRouter {
             path: '/admin/application/detail'),
         AutoRoute(page: AdminReports.page, path: '/admin/reports'),
         AutoRoute(page: AdminSettings.page, path: '/admin/settings'),
+        AutoRoute(
+            page: SuperAdminDashboard.page, path: '/super-admin/dashboard'),
+        AutoRoute(
+            page: SystemSettings.page, path: '/super-admin/system-settings'),
+        AutoRoute(page: ManageLGAdmins.page, path: '/super-admin/manage-lgas'),
+        AutoRoute(page: AuditLog.page, path: '/super-admin/audit-log'),
       ];
 }

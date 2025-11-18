@@ -144,8 +144,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (_formKey.currentState?.validate() ?? false) {
                                 final role =
                                     _selectedLoginType ?? UserRole.applicant;
-                                if (role == UserRole.lgAdmin ||
-                                    role == UserRole.superAdmin) {
+                                if (role == UserRole.superAdmin) {
+                                  context.router
+                                      .pushNamed('/super-admin/dashboard');
+                                } else if (role == UserRole.lgAdmin) {
                                   context.router.pushNamed('/admin/dashboard');
                                 } else {
                                   context.router.pushNamed('/home');

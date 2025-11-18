@@ -2,10 +2,16 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
 
 @RoutePage(name: 'AdminSettings')
 class AdminSettingsScreen extends StatelessWidget {
-  const AdminSettingsScreen({super.key});
+  final bool isSuperAdmin;
+
+  const AdminSettingsScreen({
+    super.key,
+    this.isSuperAdmin = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,17 +19,16 @@ class AdminSettingsScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
               ),
               padding: const EdgeInsets.all(24),
-              child: const Row(
+              child: Row(
                 children: [
                   Text(
-                    'LGCIVS Admin',
-                    style: TextStyle(
+                    isSuperAdmin ? 'LGCIVS Super Admin' : 'LGCIVS Admin',
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -32,7 +37,6 @@ class AdminSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Settings content
             Expanded(
               child: Container(
                 color: Colors.white,
@@ -42,7 +46,7 @@ class AdminSettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Settings',
+                        'Admin Settings',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -66,29 +70,29 @@ class AdminSettingsScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             _SettingsItem(
-                              title: 'Local Requirements',
-                              subtitle: 'Configure application requirements',
-                              icon: Icons.list_alt,
-                              onTap: () {},
+                              title: 'System Configuration',
+                              subtitle: 'Configure global settings',
+                              icon: Icons.settings,
+                              onTap: () => context.router.pushNamed('/super-admin/system-settings'),
                             ),
                             const Divider(),
                             _SettingsItem(
-                              title: 'Notification Settings',
-                              subtitle: 'Manage notification preferences',
-                              icon: Icons.notifications,
-                              onTap: () {},
+                              title: 'Audit Logs',
+                              subtitle: 'View system activity',
+                              icon: Icons.description,
+                              onTap: () => context.router.pushNamed('/super-admin/audit-log'),
                             ),
                             const Divider(),
                             _SettingsItem(
-                              title: 'Profile Settings',
-                              subtitle: 'Update your profile information',
-                              icon: Icons.person,
+                              title: 'Backup & Security',
+                              subtitle: 'Manage system backups',
+                              icon: Icons.backup,
                               onTap: () {},
                             ),
                             const Divider(),
                             _SettingsItem(
                               title: 'Logout',
-                              subtitle: 'Sign out of your account',
+                              subtitle: 'Sign out of admin panel',
                               icon: Icons.logout,
                               textColor: const Color(0xFFEF4444),
                               onTap: () {},
@@ -104,7 +108,9 @@ class AdminSettingsScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const AdminBottomNavBar(currentIndex: 3),
+      bottomNavigationBar: isSuperAdmin
+          ? const SuperAdminBottomNavBar(currentIndex: 3)
+          : const AdminBottomNavBar(currentIndex: 3),
     );
   }
 }
