@@ -5,6 +5,7 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 
@@ -140,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const ColSpacing(32),
                           CustomButton(
                             text: 'Login',
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState?.validate() ?? false) {
                                 final role =
                                     _selectedLoginType ?? UserRole.applicant;
@@ -149,6 +150,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                       .pushNamed('/super-admin/dashboard');
                                 } else if (role == UserRole.lgAdmin) {
                                   context.router.pushNamed('/admin/dashboard');
+                                } else if (role == UserRole.immigrationOfficer) {
+                                  // Store role in shared preferences for verify screen
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.setString('user_role', role.name);
+                                  context.router.pushNamed('/verify/certificate');
                                 } else {
                                   context.router.pushNamed('/home');
                                 }
