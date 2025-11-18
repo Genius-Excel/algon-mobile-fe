@@ -38,7 +38,6 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Welcome message
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: Column(
@@ -63,7 +62,6 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Main content
             const Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 15),

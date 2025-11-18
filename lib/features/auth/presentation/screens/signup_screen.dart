@@ -37,7 +37,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -47,7 +46,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // Back button
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -57,7 +55,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // Content
           Column(
             children: [
               const SafeArea(
@@ -169,7 +166,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
-                                // TODO: Implement signup logic
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Creating account...'),

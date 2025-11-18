@@ -119,9 +119,7 @@ class AdminApplicationDetailScreen extends StatelessWidget {
                     CustomButton(
                       text: 'Review',
                       iconData: Icons.visibility,
-                      onPressed: () {
-                        // TODO: Implement review action
-                      },
+                      onPressed: () {},
                       isFullWidth: true,
                     ),
                   ],

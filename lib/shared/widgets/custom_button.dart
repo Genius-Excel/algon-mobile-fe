@@ -1,3 +1,4 @@
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 enum ButtonVariant { primary, secondary, outline, text }
@@ -54,7 +55,7 @@ class CustomButton extends StatelessWidget {
           )
         : Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
             children: _buildButtonContent(textStyle),
           );
 
@@ -79,16 +80,29 @@ class CustomButton extends StatelessWidget {
 
   List<Widget> _buildButtonContent(TextStyle textStyle) {
     final hasIcon = icon != null || iconData != null;
-    final buttonText = Text(text, style: textStyle);
+    final buttonText = Text(
+      text,
+      style: textStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
+    );
 
     if (!hasIcon) return [buttonText];
 
     final iconWidget = icon ?? Icon(iconData, color: textStyle.color, size: 20);
 
     if (iconPosition == IconPosition.left) {
-      return [iconWidget, const SizedBox(width: 8), buttonText];
+      return [
+        iconWidget,
+        const SizedBox(width: 8),
+        Flexible(child: buttonText),
+      ];
     } else {
-      return [buttonText, const SizedBox(width: 8), iconWidget];
+      return [
+        Flexible(child: buttonText),
+        const SizedBox(width: 8),
+        iconWidget,
+      ];
     }
   }
 
@@ -96,8 +110,8 @@ class CustomButton extends StatelessWidget {
     switch (variant) {
       case ButtonVariant.primary:
         return ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? const Color(0xFF0D9488),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          backgroundColor: backgroundColor ?? AppColors.green,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
@@ -105,8 +119,8 @@ class CustomButton extends StatelessWidget {
         );
       case ButtonVariant.secondary:
         return ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? const Color(0xFF10B981),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          backgroundColor: backgroundColor ?? AppColors.green,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
@@ -115,12 +129,12 @@ class CustomButton extends StatelessWidget {
       case ButtonVariant.outline:
         return ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          foregroundColor: textColor ?? const Color(0xFF0D9488),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          foregroundColor: textColor ?? AppColors.green,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 12),
             side: BorderSide(
-              color: backgroundColor ?? const Color(0xFF0D9488),
+              color: backgroundColor ?? AppColors.green,
               width: 2,
             ),
           ),
@@ -128,8 +142,8 @@ class CustomButton extends StatelessWidget {
         );
       case ButtonVariant.text:
         return TextButton.styleFrom(
-          foregroundColor: textColor ?? const Color(0xFF0D9488),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          foregroundColor: textColor ?? AppColors.green,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
@@ -140,7 +154,7 @@ class CustomButton extends StatelessWidget {
   TextStyle _getTextStyle() {
     final color =
         variant == ButtonVariant.outline || variant == ButtonVariant.text
-            ? (textColor ?? const Color(0xFF0D9488))
+            ? (textColor ?? AppColors.green)
             : (textColor ?? Colors.white);
 
     return TextStyle(

@@ -124,6 +124,82 @@ class Alerts extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [DigitizationStep1Screen]
+class DigitizationStep1 extends PageRouteInfo<void> {
+  const DigitizationStep1({List<PageRouteInfo>? children})
+      : super(
+          DigitizationStep1.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'DigitizationStep1';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DigitizationStep1Screen();
+    },
+  );
+}
+
+/// generated route for
+/// [DigitizationStep2Screen]
+class DigitizationStep2 extends PageRouteInfo<void> {
+  const DigitizationStep2({List<PageRouteInfo>? children})
+      : super(
+          DigitizationStep2.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'DigitizationStep2';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DigitizationStep2Screen();
+    },
+  );
+}
+
+/// generated route for
+/// [DigitizationStep3Screen]
+class DigitizationStep3 extends PageRouteInfo<void> {
+  const DigitizationStep3({List<PageRouteInfo>? children})
+      : super(
+          DigitizationStep3.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'DigitizationStep3';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DigitizationStep3Screen();
+    },
+  );
+}
+
+/// generated route for
+/// [DigitizationStep4Screen]
+class DigitizationStep4 extends PageRouteInfo<void> {
+  const DigitizationStep4({List<PageRouteInfo>? children})
+      : super(
+          DigitizationStep4.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'DigitizationStep4';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DigitizationStep4Screen();
+    },
+  );
+}
+
+/// generated route for
 /// [FirstOnboardingScreen]
 class FirstOnboarding extends PageRouteInfo<void> {
   const FirstOnboarding({List<PageRouteInfo>? children})

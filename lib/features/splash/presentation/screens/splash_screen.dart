@@ -32,7 +32,6 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Circle with flag icon
               _FlagBadge(),
               SizedBox(height: 24),
               Text(

@@ -35,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
           Container(
             decoration:
                 const BoxDecoration(gradient: AppColors.primaryGradient),
@@ -75,7 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                // Form card
                 Expanded(
                   child: Container(
                     decoration: const BoxDecoration(
@@ -129,9 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {
-                                // TODO: Navigate to forgot password
-                              },
+                              onPressed: () {},
                               child: const Text(
                                 'Forgot Password?',
                                 style: TextStyle(
@@ -146,8 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: 'Login',
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
-                                // TODO: Implement login logic
-                                // Navigate based on user role
                                 final role =
                                     _selectedLoginType ?? UserRole.applicant;
                                 if (role == UserRole.lgAdmin ||
