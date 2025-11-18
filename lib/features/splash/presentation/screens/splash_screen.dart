@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future<void>.delayed(const Duration(milliseconds: 2000), () {
       if (!mounted) return;
-      context.router.replace(const Home());
+      context.router.replace(const Login());
     });
   }
 

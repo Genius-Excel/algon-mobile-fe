@@ -1,3 +1,5 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
+import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
@@ -49,10 +51,15 @@ class AdminReportsScreen extends StatelessWidget {
                   children: [
                     // Summary card
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 30),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: AppColors.greyDark.withOpacity(0.3),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.withOpacity(0.1),
@@ -61,19 +68,19 @@ class AdminReportsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Summary',
-                            style: TextStyle(
+                            style: AppStyles.textStyle.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.blackColor,
                             ),
                           ),
-                          SizedBox(height: 16),
-                          Row(
+                          const ColSpacing(40),
+                          const Row(
                             children: [
                               Expanded(
                                 child: _SummaryMetric(
@@ -89,8 +96,8 @@ class AdminReportsScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          SizedBox(height: 16),
-                          Row(
+                          const ColSpacing(20),
+                          const Row(
                             children: [
                               Expanded(
                                 child: _SummaryMetric(
@@ -124,19 +131,19 @@ class AdminReportsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Monthly Applications',
-                            style: TextStyle(
+                            style: AppStyles.textStyle.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.blackColor,
                             ),
                           ),
-                          SizedBox(height: 16),
-                          _MonthlyBarChart(),
+                          const SizedBox(height: 16),
+                          const _MonthlyBarChart(),
                         ],
                       ),
                     ),
@@ -155,10 +162,10 @@ class AdminReportsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Status Distribution',
                             style: TextStyle(
                               fontSize: 18,
@@ -166,55 +173,60 @@ class AdminReportsScreen extends StatelessWidget {
                               color: Color(0xFF1F2937),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Center(
+                          SizedBox(height: 16),
+                          Center(
                             child: SizedBox(
                               width: 200,
                               height: 200,
                               child: _DonutChart(),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Column(
-                            children: [
-                              _StatusLegendItem(
-                                color: Color(0xFF10B981),
-                                label: 'Approved: 128',
-                              ),
-                              SizedBox(height: 8),
-                              _StatusLegendItem(
-                                color: Color(0xFFFFA500),
-                                label: 'Pending: 45',
-                              ),
-                              SizedBox(height: 8),
-                              _StatusLegendItem(
-                                color: Color(0xFFEF4444),
-                                label: 'Rejected: 12',
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           Row(
                             children: [
                               Expanded(
-                                child: CustomButton(
-                                  text: 'Export as CSV',
-                                  iconData: Icons.download,
-                                  onPressed: () {},
+                                child: _StatusLegendItem(
+                                  color: Color(0xFF10B981),
+                                  label: 'Approved: 128',
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(height: 8),
                               Expanded(
-                                child: CustomButton(
-                                  text: 'Export as Excel',
-                                  variant: ButtonVariant.outline,
-                                  iconData: Icons.download,
-                                  onPressed: () {},
+                                child: _StatusLegendItem(
+                                  color: Color(0xFFFFA500),
+                                  label: 'Pending: 45',
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Expanded(
+                                child: _StatusLegendItem(
+                                  color: Color(0xFFEF4444),
+                                  label: 'Rejected: 12',
                                 ),
                               ),
                             ],
                           ),
+                          SizedBox(height: 16),
                         ],
+                      ),
+                    ),
+                    const ColSpacing(16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        text: 'Export as CSV',
+                        iconData: Icons.download,
+                        onPressed: () {},
+                      ),
+                    ),
+                    const ColSpacing(12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        text: 'Export as Excel',
+                        variant: ButtonVariant.outline,
+                        iconData: Icons.download,
+                        onPressed: () {},
                       ),
                     ),
                   ],
@@ -245,18 +257,18 @@ class _SummaryMetric extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+          style: AppStyles.textStyle.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+            color: AppColors.blackColor,
           ),
         ),
-        const SizedBox(height: 4),
+        const ColSpacing(4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF6B7280),
+          style: AppStyles.textStyle.copyWith(
+            fontSize: 14,
+            color: AppColors.greyDark,
           ),
         ),
       ],

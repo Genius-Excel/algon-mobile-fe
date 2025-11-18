@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/core/enums/application_status.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
-import 'package:algon_mobile/shared/widgets/custom_button.dart';
 
 @RoutePage(name: 'AdminApplications')
 class AdminApplicationsScreen extends StatefulWidget {
@@ -108,7 +107,6 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
   }
 
   Widget _buildApplicationsList() {
-    // Display different data based on selected tab
     final List<Widget> applications;
 
     switch (_selectedTab) {
@@ -141,6 +139,19 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
             location: 'Ikeja Village',
             date: '2025-10-23',
             status: ApplicationStatus.digitized,
+            referenceNumber: 'LG/2018/4532',
+            paymentStatus: 'Paid',
+            onView: () => context.router.pushNamed('/admin/application/detail'),
+          ),
+          const SizedBox(height: 12),
+          _ApplicationCard(
+            name: 'Blessing Adeyemi',
+            nin: '67890123456',
+            location: 'Ikeja Village',
+            date: '2025-10-22',
+            status: ApplicationStatus.digitized,
+            referenceNumber: 'LG/2019/5678',
+            paymentStatus: 'Paid',
             onView: () => context.router.pushNamed('/admin/application/detail'),
           ),
         ];
@@ -158,7 +169,16 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
         ];
         break;
       case 3: // Rejected
-        applications = [];
+        applications = [
+          _ApplicationCard(
+            name: 'Jane Smith',
+            nin: '45678901234',
+            location: 'Allen Village',
+            date: '2025-09-28',
+            status: ApplicationStatus.rejected,
+            onView: () => context.router.pushNamed('/admin/application/detail'),
+          ),
+        ];
         break;
       default:
         applications = [];
@@ -189,6 +209,8 @@ class _ApplicationCard extends StatelessWidget {
   final String location;
   final String date;
   final ApplicationStatus status;
+  final String? referenceNumber;
+  final String? paymentStatus;
   final VoidCallback onView;
 
   const _ApplicationCard({
@@ -197,11 +219,225 @@ class _ApplicationCard extends StatelessWidget {
     required this.location,
     required this.date,
     required this.status,
+    this.referenceNumber,
+    this.paymentStatus,
     required this.onView,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (status == ApplicationStatus.digitized) {
+      return _buildDigitizedCard();
+    }
+    return _buildStandardCard();
+  }
+
+  Widget _buildDigitizedCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'NIN: $nin',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E3),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.description,
+                      size: 16,
+                      color: status.color,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      status.label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: status.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.description,
+                  size: 20,
+                  color: status.color,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Uploaded Certificate',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: status.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                'Certificate Preview',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Payment: ',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        Text(
+                          paymentStatus ?? 'Pending',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: paymentStatus == 'Paid'
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (referenceNumber != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Ref: $referenceNumber',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: onView,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.visibility,
+                        size: 18,
+                        color: Colors.grey[700],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Review',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStandardCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -259,12 +495,32 @@ class _ApplicationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              CustomButton(
-                text: 'View',
-                iconData: Icons.visibility,
-                iconPosition: IconPosition.left,
-                variant: ButtonVariant.outline,
-                onPressed: onView,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: status.backgroundColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      status.icon,
+                      size: 16,
+                      color: status.color,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      status.label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: status.color,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

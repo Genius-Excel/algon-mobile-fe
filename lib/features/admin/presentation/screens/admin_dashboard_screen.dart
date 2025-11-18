@@ -1,7 +1,10 @@
+import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
+
+import '../../../../shared/widgets/margin.dart';
 
 @RoutePage(name: 'AdminDashboard')
 class AdminDashboardScreen extends StatelessWidget {
@@ -39,20 +42,20 @@ class AdminDashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Admin Dashboard',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
+                      style: AppStyles.textStyle.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.blackColor,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const ColSpacing(8),
                     Text(
                       'Ikeja LGA, Lagos State',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
+                      style: AppStyles.textStyle.copyWith(
+                        fontSize: 14,
+                        color: AppColors.greyDark,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -116,11 +119,14 @@ class AdminDashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      height: 200,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.greyDark.withOpacity(0.1),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.withOpacity(0.1),
@@ -136,17 +142,22 @@ class AdminDashboardScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _QuickActionButton(
-                          icon: Icons.description,
-                          label: 'Applications',
-                          onTap: () =>
-                              context.router.pushNamed('/admin/applications'),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.description,
+                            label: 'Applications',
+                            onTap: () =>
+                                context.router.pushNamed('/admin/applications'),
+                          ),
                         ),
-                        _QuickActionButton(
-                          icon: Icons.bar_chart,
-                          label: 'Reports',
-                          onTap: () =>
-                              context.router.pushNamed('/admin/reports'),
+                        const RowSpacing(16),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.bar_chart,
+                            label: 'Reports',
+                            onTap: () =>
+                                context.router.pushNamed('/admin/reports'),
+                          ),
                         ),
                       ],
                     ),
@@ -192,18 +203,18 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
+            style: AppStyles.textStyle.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: AppColors.blackColor,
             ),
           ),
-          const SizedBox(height: 4),
+          const ColSpacing(8),
           Text(
             label,
-            style: const TextStyle(
+            style: AppStyles.textStyle.copyWith(
               fontSize: 14,
-              color: Color(0xFF6B7280),
+              color: AppColors.greyDark,
             ),
           ),
         ],
@@ -268,11 +279,14 @@ class _QuickActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 150,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.greyDark.withOpacity(0.1),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
