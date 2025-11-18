@@ -2,8 +2,7 @@ enum UserRole {
   applicant('Applicant'),
   lgAdmin('LG Admin'),
   superAdmin('Super Admin'),
-  immigrationOfficer('Immigration Officer'),
-  villageHead('Village Head');
+  immigrationOfficer('Immigration Officer');
 
   final String label;
 

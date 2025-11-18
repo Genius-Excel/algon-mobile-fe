@@ -266,6 +266,25 @@ class FirstOnboarding extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [FullScreenMapScreen]
+class FullScreenMap extends PageRouteInfo<void> {
+  const FullScreenMap({List<PageRouteInfo>? children})
+      : super(
+          FullScreenMap.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'FullScreenMap';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const FullScreenMapScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [HomeScreen]
 class Home extends PageRouteInfo<void> {
   const Home({List<PageRouteInfo>? children})

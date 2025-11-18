@@ -7,6 +7,7 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/screens/admin_reports_screen.dart';
 import '../../features/admin/presentation/screens/admin_settings_screen.dart';
 import '../../features/super_admin/presentation/screens/super_admin_screens.dart';
+import '../../features/super_admin/presentation/screens/full_screen_map_screen.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/application/presentation/screens/new_application_step1_screen.dart';
 import '../../features/application/presentation/screens/new_application_step2_screen.dart';
@@ -60,5 +61,6 @@ class HelperrRouter extends RootStackRouter {
             page: SystemSettings.page, path: '/super-admin/system-settings'),
         AutoRoute(page: ManageLGAdmins.page, path: '/super-admin/manage-lgas'),
         AutoRoute(page: AuditLog.page, path: '/super-admin/audit-log'),
+        AutoRoute(page: FullScreenMap.page, path: '/super-admin/map'),
       ];
 }
