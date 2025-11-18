@@ -13,6 +13,7 @@ import '../../features/application/presentation/screens/new_application_step4_sc
 import '../../features/auth/presentation/screens/screens.dart';
 import '../../features/digitization/presentation/screens/digitization_screens.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/verify/presentation/screens/verify_screens.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screens.dart';
 import '../../features/onboarding/presentation/screens/first_onboarding_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -43,6 +44,7 @@ class HelperrRouter extends RootStackRouter {
         AutoRoute(page: DigitizationStep2.page, path: '/digitization/step2'),
         AutoRoute(page: DigitizationStep3.page, path: '/digitization/step3'),
         AutoRoute(page: DigitizationStep4.page, path: '/digitization/step4'),
+        AutoRoute(page: VerifyCertificate.page, path: '/verify/certificate'),
         AutoRoute(page: AdminDashboard.page, path: '/admin/dashboard'),
         AutoRoute(page: AdminApplications.page, path: '/admin/applications'),
         AutoRoute(

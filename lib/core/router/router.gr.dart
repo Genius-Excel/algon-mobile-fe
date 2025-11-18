@@ -445,3 +445,22 @@ class Tracking extends PageRouteInfo<void> {
     },
   );
 }
+
+/// generated route for
+/// [VerifyCertificateScreen]
+class VerifyCertificate extends PageRouteInfo<void> {
+  const VerifyCertificate({List<PageRouteInfo>? children})
+      : super(
+          VerifyCertificate.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'VerifyCertificate';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const VerifyCertificateScreen();
+    },
+  );
+}

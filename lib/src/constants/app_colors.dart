@@ -11,7 +11,7 @@ class AppColors {
   static const Color gradientEnd = Color(0xFF10B981);
   static const Color whiteColor = Color(0xffFFFFFF);
   static const Color errorColor = Color(0xffEF4444);
-  static const Color green = Color(0xff008000);
+  static const Color green = Color.fromARGB(213, 8, 77, 8);
   static const Color greenLight = Color(0xff34C759);
   static const Color orange = Color(0xffFFA500);
   static const Color yellow = Color(0xffFFCC00);

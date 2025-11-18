@@ -177,7 +177,7 @@ class DigitizationStep4Screen extends StatelessWidget {
                                 ),
                               ),
                               child: const Icon(
-                                Icons.qr_code_2,
+                                Icons.qr_code_scanner,
                                 size: 100,
                                 color: AppColors.greyDark,
                               ),
