@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
               _FlagBadge(),
               SizedBox(height: 24),
               Text(
-                'LGCIVS',
+                'ALGON',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,

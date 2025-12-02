@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'LGCIVS',
+                    'ALGON',
                     style: AppStyles.textStyle.copyWith(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

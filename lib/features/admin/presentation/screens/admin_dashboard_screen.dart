@@ -25,7 +25,7 @@ class AdminDashboardScreen extends StatelessWidget {
               child: const Row(
                 children: [
                   Text(
-                    'LGCIVS Admin',
+                    'ALGON Admin',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

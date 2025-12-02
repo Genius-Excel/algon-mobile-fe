@@ -24,7 +24,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
               child: const Row(
                 children: [
                   Text(
-                    'LGCIVS Super Admin',
+                    'ALGON Super Admin',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -107,8 +107,8 @@ class SuperAdminDashboardScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const NationalCoverageSection(),
-                      const ColSpacing(15),
+                      // const NationalCoverageSection(),
+                      // const ColSpacing(15),
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(

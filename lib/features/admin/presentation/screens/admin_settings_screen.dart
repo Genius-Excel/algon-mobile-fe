@@ -27,7 +27,7 @@ class AdminSettingsScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    isSuperAdmin ? 'LGCIVS Super Admin' : 'LGCIVS Admin',
+                    isSuperAdmin ? 'ALGON Super Admin' : 'ALGON Admin',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -73,14 +73,16 @@ class AdminSettingsScreen extends StatelessWidget {
                               title: 'System Configuration',
                               subtitle: 'Configure global settings',
                               icon: Icons.settings,
-                              onTap: () => context.router.pushNamed('/super-admin/system-settings'),
+                              onTap: () => context.router
+                                  .pushNamed('/super-admin/system-settings'),
                             ),
                             const Divider(),
                             _SettingsItem(
                               title: 'Audit Logs',
                               subtitle: 'View system activity',
                               icon: Icons.description,
-                              onTap: () => context.router.pushNamed('/super-admin/audit-log'),
+                              onTap: () => context.router
+                                  .pushNamed('/super-admin/audit-log'),
                             ),
                             const Divider(),
                             _SettingsItem(

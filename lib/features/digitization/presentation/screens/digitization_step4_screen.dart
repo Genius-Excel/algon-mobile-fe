@@ -1,3 +1,4 @@
+import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
@@ -162,35 +163,7 @@ class DigitizationStep4Screen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 24),
-                            Container(
-                              width: 100,
-                              height: 100,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: AppColors.greyDark.withOpacity(0.6),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.qr_code_scanner,
-                                size: 100,
-                                color: AppColors.greyDark,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'QR Code for Verification',
-                              style: AppStyles.textStyle.copyWith(
-                                fontSize: 14,
-                                color: AppColors.greyDark.withOpacity(0.6),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
+                            const ColSpacing(24),
                           ],
                         ),
                       ),

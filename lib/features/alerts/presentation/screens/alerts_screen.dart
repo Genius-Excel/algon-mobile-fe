@@ -22,7 +22,7 @@ class AlertsScreen extends StatelessWidget {
               child: const Row(
                 children: [
                   Text(
-                    'LGCIVS',
+                    'ALGON',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
