@@ -9,8 +9,8 @@ class AppConfig {
 AppConfig configFor(AppEnv env) {
   switch (env) {
     case AppEnv.dev:
-      return const AppConfig(baseUrl: 'https://api.dev.example.com');
+      return const AppConfig(baseUrl: 'https://algon-be.geniusexcel.tech/api/');
     case AppEnv.prod:
-      return const AppConfig(baseUrl: 'https://api.example.com');
+      return const AppConfig(baseUrl: 'https://algon-be.geniusexcel.tech/api/');
   }
 }

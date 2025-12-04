@@ -1,34 +1,104 @@
 import 'package:algon_mobile/core/enums/user_role.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
+import 'package:algon_mobile/features/auth/data/models/login_models.dart';
+import 'package:algon_mobile/features/auth/data/repository/auth_repository_impl.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
-import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
 
 @RoutePage(name: 'Login')
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailOrNinController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  UserRole? _selectedLoginType;
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailOrNinController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      final request = LoginRequest(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final result = await authRepository.login(request);
+
+      result.when(
+        success: (LoginResponse response) async {
+          // Store tokens and user info
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', response.accessToken);
+          await prefs.setString('refresh_token', response.refreshToken);
+          await prefs.setString('user_id', response.userId);
+          await prefs.setString('user_role', response.role);
+
+          // Map API role to UserRole enum
+          final userRole = UserRole.fromApiRole(response.role);
+
+          if (mounted) {
+            // Navigate based on role
+            if (userRole == UserRole.superAdmin) {
+              context.router.pushNamed('/super-admin/dashboard');
+            } else if (userRole == UserRole.lgAdmin) {
+              context.router.pushNamed('/admin/dashboard');
+            } else if (userRole == UserRole.immigrationOfficer) {
+              context.router.pushNamed('/verify/certificate');
+            } else {
+              context.router.pushNamed('/home');
+            }
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Toast.error('An unexpected error occurred: ${e.toString()}', context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -88,22 +158,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       key: _formKey,
                       child: ListView(
                         children: [
-                          CustomDropdownField<UserRole>(
-                            label: 'Login As',
-                            value: _selectedLoginType ?? UserRole.applicant,
-                            items: UserRole.values,
-                            itemBuilder: (role) => role.label,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedLoginType = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
                           CustomTextField(
-                            controller: _emailOrNinController,
-                            label: 'Email or NIN',
-                            hint: 'Enter your email or NIN',
+                            controller: _emailController,
+                            label: 'Email',
+                            hint: 'Enter your email',
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           CustomTextField(
@@ -111,6 +179,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             label: 'Password',
                             hint: 'Enter your password',
                             obscureText: _obscurePassword,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              return null;
+                            },
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -141,25 +215,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           const ColSpacing(32),
                           CustomButton(
                             text: 'Login',
-                            onPressed: () async {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                final role =
-                                    _selectedLoginType ?? UserRole.applicant;
-                                if (role == UserRole.superAdmin) {
-                                  context.router
-                                      .pushNamed('/super-admin/dashboard');
-                                } else if (role == UserRole.lgAdmin) {
-                                  context.router.pushNamed('/admin/dashboard');
-                                } else if (role == UserRole.immigrationOfficer) {
-                                  // Store role in shared preferences for verify screen
-                                  final prefs = await SharedPreferences.getInstance();
-                                  await prefs.setString('user_role', role.name);
-                                  context.router.pushNamed('/verify/certificate');
-                                } else {
-                                  context.router.pushNamed('/home');
-                                }
-                              }
-                            },
+                            isLoading: _isLoading,
+                            onPressed: _isLoading ? null : _handleLogin,
+                            isFullWidth: true,
                           ),
                           const ColSpacing(16),
                           Row(

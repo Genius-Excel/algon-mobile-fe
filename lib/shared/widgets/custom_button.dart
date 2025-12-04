@@ -46,10 +46,10 @@ class CustomButton extends StatelessWidget {
 
     Widget buttonChild = isLoading
         ? const SizedBox(
-            height: 20,
-            width: 20,
+            height: 24,
+            width: 24,
             child: CircularProgressIndicator.adaptive(
-              strokeWidth: 2,
+              strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           )
@@ -59,12 +59,15 @@ class CustomButton extends StatelessWidget {
             children: _buildButtonContent(textStyle),
           );
 
-    final buttonWidget = ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: buttonStyle,
-      child: isFullWidth
-          ? SizedBox(width: double.infinity, child: buttonChild)
-          : buttonChild,
+    final buttonWidget = IgnorePointer(
+      ignoring: isLoading,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: buttonStyle,
+        child: isFullWidth
+            ? SizedBox(width: double.infinity, child: buttonChild)
+            : buttonChild,
+      ),
     );
 
     if (width != null || height != null) {
