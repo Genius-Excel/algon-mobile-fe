@@ -45,12 +45,14 @@ class CustomButton extends StatelessWidget {
     final textStyle = _getTextStyle();
 
     Widget buttonChild = isLoading
-        ? const SizedBox(
-            height: 24,
-            width: 24,
-            child: CircularProgressIndicator.adaptive(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ? const Center(
+            child: SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator.adaptive(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
             ),
           )
         : Row(
@@ -64,7 +66,7 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: buttonStyle,
-        child: isFullWidth
+        child: isFullWidth && !isLoading
             ? SizedBox(width: double.infinity, child: buttonChild)
             : buttonChild,
       ),
