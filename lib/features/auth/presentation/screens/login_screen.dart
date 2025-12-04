@@ -206,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: const Text(
                                 'Forgot Password?',
                                 style: TextStyle(
-                                  color: Color(0xFF0D9488),
+                                  color: AppColors.green,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -216,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           CustomButton(
                             text: 'Login',
                             isLoading: _isLoading,
-                            onPressed: _isLoading ? null : _handleLogin,
+                            onPressed: _handleLogin,
                             isFullWidth: true,
                           ),
                           const ColSpacing(16),
@@ -236,7 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
-                                    color: Color(0xFF0D9488),
+                                    color: AppColors.green,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
