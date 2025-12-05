@@ -41,4 +41,23 @@ enum ApplicationStatus {
         return Icons.search;
     }
   }
+
+  static ApplicationStatus fromString(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return ApplicationStatus.pending;
+      case 'approved':
+        return ApplicationStatus.approved;
+      case 'rejected':
+        return ApplicationStatus.rejected;
+      case 'digitized':
+      case 'digitization':
+        return ApplicationStatus.digitized;
+      case 'under_review':
+      case 'under review':
+        return ApplicationStatus.underReview;
+      default:
+        return ApplicationStatus.pending;
+    }
+  }
 }

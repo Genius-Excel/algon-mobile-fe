@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/env.dart';
+import '../interceptors/auth_interceptor.dart';
 import '../services/api/api_client.dart';
 
 final currentEnvProvider = Provider<AppEnv>((ref) => AppEnv.dev);
@@ -20,6 +21,7 @@ final dioProvider = Provider<Dio>((ref) {
       receiveTimeout: const Duration(seconds: 30),
     ),
   );
+  dio.interceptors.add(AuthInterceptor());
   dio.interceptors.add(LogInterceptor(responseBody: false));
   return dio;
 });

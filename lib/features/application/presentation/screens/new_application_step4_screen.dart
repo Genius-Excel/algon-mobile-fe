@@ -2,15 +2,19 @@ import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
+import 'package:algon_mobile/features/application/presentation/providers/application_form_provider.dart';
 
 @RoutePage(name: 'NewApplicationStep4')
-class NewApplicationStep4Screen extends StatelessWidget {
+class NewApplicationStep4Screen extends ConsumerWidget {
   const NewApplicationStep4Screen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formData = ref.watch(applicationFormProvider);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -38,27 +42,32 @@ class NewApplicationStep4Screen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const _ReviewCard(
+                      _ReviewCard(
                         title: 'Personal Information',
                         items: [
-                          'John Doe',
-                          'NIN: 12345678901',
+                          formData.fullName ?? 'N/A',
+                          'NIN: ${formData.nin ?? 'N/A'}',
+                          // 'DOB: ${formData.dateOfBirth ?? 'N/A'}',
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const _ReviewCard(
+                      _ReviewCard(
                         title: 'Location',
                         items: [
-                          'Sample Village',
-                          'Ikeja LGA, Lagos State',
+                          formData.village ?? 'N/A',
+                          '${formData.localGovernment ?? 'N/A'} LGA, ${formData.stateValue ?? 'N/A'} State',
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const _ReviewCard(
+                      _ReviewCard(
                         title: 'Contact',
                         items: [
-                          'john.doe@email.com',
-                          '+234 801 234 5678',
+                          formData.email ?? 'N/A',
+                          formData.phoneNumber ?? 'N/A',
+                          if (formData.residentialAddress != null)
+                            formData.residentialAddress!,
+                          if (formData.landmark != null)
+                            'Landmark: ${formData.landmark!}',
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -112,8 +121,10 @@ class NewApplicationStep4Screen extends StatelessWidget {
                   const RowSpacing(16),
                   Expanded(
                     child: CustomButton(
-                      text: 'Submit Application',
+                      text: 'Continue',
                       onPressed: () {
+                        // Navigate to tracking after application is submitted
+                        formData.reset();
                         context.router.pushNamed('/tracking');
                       },
                     ),

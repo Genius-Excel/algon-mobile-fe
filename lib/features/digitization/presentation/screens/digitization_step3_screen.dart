@@ -1,20 +1,116 @@
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/features/digitization/presentation/providers/digitization_form_provider.dart';
+import 'package:algon_mobile/features/payment/data/repository/payment_repository.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'DigitizationStep3')
-class DigitizationStep3Screen extends StatefulWidget {
+class DigitizationStep3Screen extends ConsumerStatefulWidget {
   const DigitizationStep3Screen({super.key});
 
   @override
-  State<DigitizationStep3Screen> createState() =>
+  ConsumerState<DigitizationStep3Screen> createState() =>
       _DigitizationStep3ScreenState();
 }
 
-class _DigitizationStep3ScreenState extends State<DigitizationStep3Screen> {
+class _DigitizationStep3ScreenState
+    extends ConsumerState<DigitizationStep3Screen> {
   String? _selectedPaymentMethod;
+  bool _isLoading = false;
+  static const int _digitizationFee = 2000;
+
+  Future<void> _initiatePayment() async {
+    if (_selectedPaymentMethod == null) {
+      Toast.error('Please select a payment method', context);
+      return;
+    }
+
+    final formData = ref.read(digitizationFormProvider);
+    
+    if (formData.applicationId == null) {
+      Toast.error('Application ID not found. Please go back and complete the previous steps.', context);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+      
+      // Initiate payment
+      final result = await paymentRepo.initiatePayment(
+        formData.applicationId!,
+        'application', // Using same payment type for digitization
+        amount: _digitizationFee,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            // Save payment method to provider
+            formData.paymentMethod = _selectedPaymentMethod;
+            
+            // Open payment URL
+            _openPaymentUrl(response.data.authorizationUrl);
+            
+            // Navigate to step 4 after a short delay to allow URL to open
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                context.router.pushNamed('/digitization/step4');
+              }
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Failed to initiate payment: ${e.toString()}', context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openPaymentUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (mounted) {
+          Toast.error('Could not open payment link', context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Error opening payment link: ${e.toString()}', context);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +162,9 @@ class _DigitizationStep3ScreenState extends State<DigitizationStep3Screen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              '₦2,000',
-                              style: TextStyle(
+                            Text(
+                              '₦${_digitizationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                              style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF065F46),
@@ -180,18 +276,15 @@ class _DigitizationStep3ScreenState extends State<DigitizationStep3Screen> {
                     child: CustomButton(
                       text: 'Back',
                       variant: ButtonVariant.outline,
-                      onPressed: () => context.router.maybePop(),
+                      onPressed: _isLoading ? null : () => context.router.maybePop(),
                     ),
                   ),
                   const SizedBox(width: 7),
                   Expanded(
                     child: CustomButton(
-                      text: 'Complete Payment',
-                      onPressed: () {
-                        if (_selectedPaymentMethod != null) {
-                          context.router.pushNamed('/digitization/step4');
-                        }
-                      },
+                      text: _isLoading ? 'Processing...' : 'Complete Payment',
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? null : _initiatePayment,
                     ),
                   ),
                 ],

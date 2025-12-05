@@ -2,20 +2,118 @@ import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/features/application/presentation/providers/application_form_provider.dart';
+import 'package:algon_mobile/features/payment/data/repository/payment_repository.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'NewApplicationStep3')
-class NewApplicationStep3Screen extends StatefulWidget {
+class NewApplicationStep3Screen extends ConsumerStatefulWidget {
   const NewApplicationStep3Screen({super.key});
 
   @override
-  State<NewApplicationStep3Screen> createState() =>
+  ConsumerState<NewApplicationStep3Screen> createState() =>
       _NewApplicationStep3ScreenState();
 }
 
-class _NewApplicationStep3ScreenState extends State<NewApplicationStep3Screen> {
+class _NewApplicationStep3ScreenState
+    extends ConsumerState<NewApplicationStep3Screen> {
   String? _selectedPaymentMethod;
+  bool _isLoading = false;
+  static const int _applicationFee = 5000;
+
+  Future<void> _initiatePayment() async {
+    if (_selectedPaymentMethod == null) {
+      Toast.error('Please select a payment method', context);
+      return;
+    }
+
+    final formData = ref.read(applicationFormProvider);
+
+    if (formData.applicationId == null) {
+      Toast.error(
+          'Application ID not found. Please go back and complete the previous steps.',
+          context);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+
+      // Initiate payment
+      final result = await paymentRepo.initiatePayment(
+        formData.applicationId!,
+        'application',
+        amount: _applicationFee,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            // Save payment method to provider
+            formData.paymentMethod = _selectedPaymentMethod;
+
+            // Open payment URL
+            _openPaymentUrl(response.data.authorizationUrl);
+
+            // Navigate to step 4 after a short delay to allow URL to open
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                context.router.pushNamed('/application/step4');
+              }
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Failed to initiate payment: ${e.toString()}', context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openPaymentUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (mounted) {
+          Toast.error('Could not open payment link', context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Error opening payment link: ${e.toString()}', context);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,21 +152,21 @@ class _NewApplicationStep3ScreenState extends State<NewApplicationStep3Screen> {
                           color: const Color(0xFFE8F5E3),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Column(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Application Fee',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: AppColors.greyDark,
                               ),
                             ),
-                            ColSpacing(16),
+                            const ColSpacing(16),
                             Text(
-                              '₦5,000',
-                              style: TextStyle(
+                              '₦${_applicationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.blackColor,
@@ -124,19 +222,17 @@ class _NewApplicationStep3ScreenState extends State<NewApplicationStep3Screen> {
                     child: CustomButton(
                       text: 'Back',
                       variant: ButtonVariant.outline,
-                      onPressed: () => context.router.maybePop(),
+                      onPressed:
+                          _isLoading ? null : () => context.router.maybePop(),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: CustomButton(
-                      text: 'Next',
-                      iconData: Icons.arrow_forward,
-                      onPressed: () {
-                        if (_selectedPaymentMethod != null) {
-                          context.router.pushNamed('/application/step4');
-                        }
-                      },
+                      text: _isLoading ? 'Processing...' : 'Pay Now',
+                      iconData: _isLoading ? null : Icons.arrow_forward,
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? null : _initiatePayment,
                     ),
                   ),
                 ],

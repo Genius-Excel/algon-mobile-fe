@@ -3,15 +3,19 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
+import 'package:algon_mobile/features/digitization/presentation/providers/digitization_form_provider.dart';
 
 @RoutePage(name: 'DigitizationStep4')
-class DigitizationStep4Screen extends StatelessWidget {
+class DigitizationStep4Screen extends ConsumerWidget {
   const DigitizationStep4Screen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formData = ref.watch(digitizationFormProvider);
+    
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -179,15 +183,22 @@ class DigitizationStep4Screen extends StatelessWidget {
                   CustomButton(
                     text: 'Download Digital Certificate',
                     iconData: Icons.download,
-                    onPressed: () {},
+                    onPressed: () {
+                      // TODO: Implement download functionality
+                    },
                     isFullWidth: true,
                   ),
                   const SizedBox(height: 12),
                   CustomButton(
-                    text: 'Share Verification ID',
-                    iconData: Icons.share,
+                    text: 'Continue',
+                    iconData: Icons.check,
                     variant: ButtonVariant.outline,
-                    onPressed: () {},
+                    onPressed: () {
+                      // Navigate to tracking after digitization is complete
+                      final formData = ref.read(digitizationFormProvider);
+                      formData.reset();
+                      context.router.pushNamed('/tracking');
+                    },
                     isFullWidth: true,
                   ),
                 ],
