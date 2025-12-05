@@ -29,4 +29,8 @@ class ApiEndpoints {
   static const String auditLogs = '/admin/super/audit-logs';
   static String auditLog(String id) => '/admin/super/audit-log/$id';
   static const String superAdminDashboard = '/admin/super/dashboard';
+
+  // LG Admin endpoints
+  static const String adminDashboard = '/admin/dashboard';
+  static const String lgaFee = '/application-fees/local-government';
 }
