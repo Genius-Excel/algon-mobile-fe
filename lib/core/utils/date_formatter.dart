@@ -22,4 +22,34 @@ class DateFormatter {
     final day = date.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
   }
+
+  /// Format ISO 8601 date string to readable format
+  static String formatDisplayDate(String isoDateString) {
+    try {
+      final date = DateTime.parse(isoDateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays == 0) {
+        if (difference.inHours == 0) {
+          if (difference.inMinutes == 0) {
+            return 'Just now';
+          }
+          return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+        }
+        return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else if (difference.inDays < 30) {
+        final weeks = (difference.inDays / 7).floor();
+        return '$weeks week${weeks == 1 ? '' : 's'} ago';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return isoDateString; // Return as-is on error
+    }
+  }
 }

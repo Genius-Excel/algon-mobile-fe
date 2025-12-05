@@ -1,19 +1,75 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
+import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
+import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
+import 'package:algon_mobile/features/application/data/models/states_models.dart';
+import 'package:algon_mobile/features/super_admin/data/repository/super_admin_repository.dart';
+import 'package:algon_mobile/features/super_admin/data/models/invite_lg_admin_models.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'ManageLGAdmins')
-class ManageLGAdminsScreen extends StatefulWidget {
+class ManageLGAdminsScreen extends ConsumerStatefulWidget {
   const ManageLGAdminsScreen({super.key});
 
   @override
-  State<ManageLGAdminsScreen> createState() => _ManageLGAdminsScreenState();
+  ConsumerState<ManageLGAdminsScreen> createState() =>
+      _ManageLGAdminsScreenState();
 }
 
-class _ManageLGAdminsScreenState extends State<ManageLGAdminsScreen> {
+class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
   final _searchController = TextEditingController();
+  List<StateData> _states = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStates();
+  }
+
+  Future<void> _fetchStates() async {
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final result = await applicationRepo.getAllStates();
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _states = response.data;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Failed to load states: ${e.toString()}', context);
+      }
+    }
+  }
+
+  void _showInviteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _InviteLGAdminDialog(
+        states: _states,
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -123,6 +179,236 @@ class _ManageLGAdminsScreenState extends State<ManageLGAdminsScreen> {
         ),
       ),
       bottomNavigationBar: const SuperAdminBottomNavBar(currentIndex: 1),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showInviteDialog,
+        backgroundColor: AppColors.green,
+        icon: const Icon(Icons.person_add, color: Colors.white),
+        label: const Text(
+          'Invite Admin',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _InviteLGAdminDialog extends ConsumerStatefulWidget {
+  final List<StateData> states;
+
+  const _InviteLGAdminDialog({required this.states});
+
+  @override
+  ConsumerState<_InviteLGAdminDialog> createState() =>
+      _InviteLGAdminDialogState();
+}
+
+class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  StateData? _selectedState;
+  LocalGovernment? _selectedLG;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  List<LocalGovernment> get _selectedLocalGovernments {
+    if (_selectedState == null) return [];
+    return _selectedState!.localGovernments;
+  }
+
+  Future<void> _inviteAdmin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      Toast.formError(context);
+      return;
+    }
+
+    if (_selectedState == null || _selectedLG == null) {
+      Toast.error('Please select both State and Local Government', context);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final superAdminRepo = ref.read(superAdminRepositoryProvider);
+      final request = InviteLGAdminRequest(
+        state: _selectedState!.id,
+        lga: _selectedLG!.id,
+        fullName: _fullNameController.text.trim(),
+        email: _emailController.text.trim(),
+      );
+
+      final result = await superAdminRepo.inviteLGAdmin(request);
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            Toast.success(response.message, context);
+            Navigator.of(context).pop();
+            // TODO: Refresh the list of LG admins
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Failed to invite admin: ${e.toString()}', context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Invite LG Admin',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                CustomTextField(
+                  controller: _fullNameController,
+                  label: 'Full Name',
+                  hint: 'Enter full name',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Full name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  hint: 'admin@example.com',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                CustomDropdownField<StateData>(
+                  label: 'State',
+                  value: _selectedState,
+                  items: widget.states,
+                  hint: 'Select state',
+                  itemBuilder: (state) => state.name,
+                  validator: (value) {
+                    if (value == null) {
+                      return 'State is required';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedState = value;
+                      _selectedLG = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                CustomDropdownField<LocalGovernment>(
+                  label: 'Local Government',
+                  value: _selectedLG,
+                  items: _selectedLocalGovernments,
+                  hint: _selectedState == null
+                      ? 'Select state first'
+                      : 'Select Local Government',
+                  itemBuilder: (lg) => lg.name,
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Local Government is required';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedLG = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Cancel',
+                        variant: ButtonVariant.outline,
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: CustomButton(
+                        text: _isLoading ? 'Inviting...' : 'Invite',
+                        isLoading: _isLoading,
+                        onPressed: _isLoading ? null : _inviteAdmin,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -207,11 +493,10 @@ class _LGAdminCard extends StatelessWidget {
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFFE8F5E3)
-                      : Colors.grey[200],
+                  color: isActive ? const Color(0xFFE8F5E3) : Colors.grey[200],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -239,7 +524,8 @@ class _LGAdminCard extends StatelessWidget {
                 GestureDetector(
                   onTap: onEdit,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
@@ -262,4 +548,3 @@ class _LGAdminCard extends StatelessWidget {
     );
   }
 }
-

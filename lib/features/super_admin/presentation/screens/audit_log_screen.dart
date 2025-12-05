@@ -1,11 +1,130 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/core/utils/date_formatter.dart';
+import 'package:algon_mobile/features/super_admin/data/repository/super_admin_repository.dart';
+import 'package:algon_mobile/features/super_admin/data/models/audit_log_models.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'AuditLog')
-class AuditLogScreen extends StatelessWidget {
+class AuditLogScreen extends ConsumerStatefulWidget {
   const AuditLogScreen({super.key});
+
+  @override
+  ConsumerState<AuditLogScreen> createState() => _AuditLogScreenState();
+}
+
+class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
+  List<AuditLogItem> _auditLogs = [];
+  bool _isLoading = false;
+  int _currentPage = 1;
+  bool _hasMore = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAuditLogs();
+  }
+
+  Future<void> _fetchAuditLogs({bool loadMore = false}) async {
+    if (!loadMore) {
+      setState(() {
+        _isLoading = true;
+        _currentPage = 1;
+      });
+    }
+
+    try {
+      final superAdminRepo = ref.read(superAdminRepositoryProvider);
+      final result = await superAdminRepo.getAuditLogs(
+        page: loadMore ? _currentPage + 1 : 1,
+        pageSize: 20,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              if (loadMore) {
+                _auditLogs.addAll(response.data.results);
+                _currentPage++;
+              } else {
+                _auditLogs = response.data.results;
+                _currentPage = 1;
+              }
+              _hasMore = response.data.next != null;
+              _isLoading = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        Toast.error('Failed to load audit logs: ${e.toString()}', context);
+      }
+    }
+  }
+
+  IconData _getActionIcon(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'login':
+        return Icons.login;
+      case 'logout':
+        return Icons.logout;
+      case 'create':
+        return Icons.add_circle;
+      case 'update':
+        return Icons.edit;
+      case 'delete':
+        return Icons.delete;
+      case 'view':
+        return Icons.visibility;
+      case 'approve':
+        return Icons.check_circle;
+      case 'reject':
+        return Icons.cancel;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _getActionColor(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'login':
+        return const Color(0xFF3B82F6);
+      case 'create':
+        return AppColors.green;
+      case 'update':
+        return const Color(0xFFF59E0B);
+      case 'delete':
+      case 'reject':
+        return const Color(0xFFEF4444);
+      case 'view':
+        return const Color(0xFF6B7280);
+      case 'approve':
+        return AppColors.green;
+      default:
+        return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,77 +166,63 @@ class AuditLogScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    onPressed: () => _fetchAuditLogs(),
+                  ),
                 ],
               ),
             ),
             Expanded(
-              child: Container(
-                color: const Color(0xFFF9FAFB),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _AuditLogItem(
-                      icon: Icons.check_circle,
-                      iconColor: AppColors.green,
-                      title: 'Certificate Approved',
-                      actor: 'Abubakar Ibrahim',
-                      location: 'Ikeja LGA',
-                      timestamp: '2 hours ago',
-                      role: 'LG Admin',
-                      roleColor: const Color(0xFFDBEAFE),
-                      roleTextColor: const Color(0xFF1E40AF),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuditLogItem(
-                      icon: Icons.shield,
-                      iconColor: const Color(0xFF3B82F6),
-                      title: 'Admin Created',
-                      actor: 'System Administrator',
-                      location: 'All Nigeria',
-                      timestamp: '5 hours ago',
-                      role: 'Super Admin',
-                      roleColor: const Color(0xFFE9D5FF),
-                      roleTextColor: const Color(0xFF7C3AED),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuditLogItem(
-                      icon: Icons.check_circle,
-                      iconColor: AppColors.green,
-                      title: 'Certificate Approved',
-                      actor: 'Chidinma Okafor',
-                      location: 'Owerri Municipal',
-                      timestamp: '1 day ago',
-                      role: 'LG Admin',
-                      roleColor: const Color(0xFFDBEAFE),
-                      roleTextColor: const Color(0xFF1E40AF),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuditLogItem(
-                      icon: Icons.settings,
-                      iconColor: Colors.grey,
-                      title: 'Settings Updated',
-                      actor: 'System Administrator',
-                      location: 'All Nigeria',
-                      timestamp: '1 day ago',
-                      role: 'Super Admin',
-                      roleColor: const Color(0xFFE9D5FF),
-                      roleTextColor: const Color(0xFF7C3AED),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuditLogItem(
-                      icon: Icons.cancel,
-                      iconColor: const Color(0xFFEF4444),
-                      title: 'Certificate Rejected',
-                      actor: 'Mohammed Yusuf',
-                      location: 'Kano Municipal',
-                      timestamp: '2 days ago',
-                      role: 'LG Admin',
-                      roleColor: const Color(0xFFDBEAFE),
-                      roleTextColor: const Color(0xFF1E40AF),
-                    ),
-                  ],
-                ),
-              ),
+              child: _isLoading && _auditLogs.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : _auditLogs.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.description_outlined,
+                                  size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No audit logs found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: () => _fetchAuditLogs(),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _auditLogs.length + (_hasMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == _auditLogs.length) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : TextButton(
+                                            onPressed: () =>
+                                                _fetchAuditLogs(loadMore: true),
+                                            child: const Text('Load More'),
+                                          ),
+                                  ),
+                                );
+                              }
+                              final log = _auditLogs[index];
+                              return _AuditLogItemWidget(
+                                log: log,
+                                icon: _getActionIcon(log.actionType),
+                                iconColor: _getActionColor(log.actionType),
+                              );
+                            },
+                          ),
+                        ),
             ),
           ],
         ),
@@ -127,32 +232,21 @@ class AuditLogScreen extends StatelessWidget {
   }
 }
 
-class _AuditLogItem extends StatelessWidget {
+class _AuditLogItemWidget extends StatelessWidget {
+  final AuditLogItem log;
   final IconData icon;
   final Color iconColor;
-  final String title;
-  final String actor;
-  final String location;
-  final String timestamp;
-  final String role;
-  final Color roleColor;
-  final Color roleTextColor;
 
-  const _AuditLogItem({
+  const _AuditLogItemWidget({
+    required this.log,
     required this.icon,
     required this.iconColor,
-    required this.title,
-    required this.actor,
-    required this.location,
-    required this.timestamp,
-    required this.role,
-    required this.roleColor,
-    required this.roleTextColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -186,33 +280,49 @@ class _AuditLogItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        log.description,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: iconColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        log.actionType.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: iconColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  actor,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1F2937),
+                const SizedBox(height: 8),
+                if (log.tableName.isNotEmpty) ...[
+                  Text(
+                    'Table: ${log.tableName}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
+                  const SizedBox(height: 4),
+                ],
                 Text(
-                  location,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timestamp,
+                  DateFormatter.formatDisplayDate(log.createdAt),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[500],
@@ -221,24 +331,8 @@ class _AuditLogItem extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: roleColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              role,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: roleTextColor,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 }
-

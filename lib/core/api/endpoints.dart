@@ -23,4 +23,10 @@ class ApiEndpoints {
 
   // Payment endpoints
   static const String initiatePayment = '/certificate/initiate-payment';
+
+  // Super Admin endpoints
+  static const String inviteLGAdmin = '/admin/super/invite-lg';
+  static const String auditLogs = '/admin/super/audit-logs';
+  static String auditLog(String id) => '/admin/super/audit-log/$id';
+  static const String superAdminDashboard = '/admin/super/dashboard';
 }
