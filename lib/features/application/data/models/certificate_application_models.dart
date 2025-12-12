@@ -34,11 +34,15 @@ class CertificateApplicationRequest {
 
 @JsonSerializable()
 class UserData {
+  @JsonKey(name: 'full_name')
   final String fullName;
+  @JsonKey(name: 'date_of_birth')
   final String dateOfBirth;
+  @JsonKey(name: 'phone_number')
   final String phoneNumber;
   final String email;
   final String state;
+  @JsonKey(name: 'local_government')
   final String localGovernment;
   final String village;
   final String nin;
@@ -62,7 +66,9 @@ class UserData {
 
 @JsonSerializable()
 class CertificateApplicationData {
+  @JsonKey(name: 'user_data')
   final UserData userData;
+  @JsonKey(name: 'extra_fields')
   final List<dynamic> extraFields;
   @JsonKey(name: 'application_id')
   final String applicationId;

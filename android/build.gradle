@@ -1,7 +1,19 @@
 allprojects {
     repositories {
-        google()
-        mavenCentral()
+        google {
+            content {
+                includeGroupByRegex "com\\.android.*"
+                includeGroupByRegex "com\\.google.*"
+                includeGroupByRegex "androidx.*"
+            }
+        }
+        mavenCentral {
+            content {
+                includeGroupByRegex "org\\.jetbrains.*"
+                includeGroupByRegex ".*"
+            }
+        }
+        gradlePluginPortal()
     }
 }
 

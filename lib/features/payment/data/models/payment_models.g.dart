@@ -15,12 +15,21 @@ InitiatePaymentRequest _$InitiatePaymentRequestFromJson(
     );
 
 Map<String, dynamic> _$InitiatePaymentRequestToJson(
-        InitiatePaymentRequest instance) =>
-    <String, dynamic>{
-      'payment_type': instance.paymentType,
-      'application_id': instance.applicationId,
-      'amount': instance.amount,
-    };
+    InitiatePaymentRequest instance) {
+  final val = <String, dynamic>{
+    'payment_type': instance.paymentType,
+    'application_id': instance.applicationId,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('amount', instance.amount);
+  return val;
+}
 
 PaymentData _$PaymentDataFromJson(Map<String, dynamic> json) => PaymentData(
       authorizationUrl: json['authorization_url'] as String,
@@ -38,13 +47,26 @@ Map<String, dynamic> _$PaymentDataToJson(PaymentData instance) =>
 InitiatePaymentResponse _$InitiatePaymentResponseFromJson(
         Map<String, dynamic> json) =>
     InitiatePaymentResponse(
+      message: json['message'] as String,
+      data: PaymentResponseData.fromJson(json['data'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$InitiatePaymentResponseToJson(
+        InitiatePaymentResponse instance) =>
+    <String, dynamic>{
+      'message': instance.message,
+      'data': instance.data,
+    };
+
+PaymentResponseData _$PaymentResponseDataFromJson(Map<String, dynamic> json) =>
+    PaymentResponseData(
       status: json['status'] as bool,
       message: json['message'] as String,
       data: PaymentData.fromJson(json['data'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$InitiatePaymentResponseToJson(
-        InitiatePaymentResponse instance) =>
+Map<String, dynamic> _$PaymentResponseDataToJson(
+        PaymentResponseData instance) =>
     <String, dynamic>{
       'status': instance.status,
       'message': instance.message,

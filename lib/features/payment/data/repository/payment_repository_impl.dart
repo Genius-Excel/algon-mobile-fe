@@ -28,15 +28,19 @@ class PaymentRepositoryImpl implements PaymentRepository {
         amount: amount,
       );
 
+      final requestJson = request.toJson();
+      
       print('🚀 Initiate Payment API Call:');
       print('   Endpoint: ${ApiEndpoints.initiatePayment}');
       print('   Application ID: $applicationId');
       print('   Payment Type: $paymentType');
-      if (amount != null) print('   Amount: $amount');
+      if (amount != null) print('   Amount: $amount (type: ${amount.runtimeType})');
+      print('   Request JSON: $requestJson');
+      print('   Amount in JSON: ${requestJson['amount']} (type: ${requestJson['amount']?.runtimeType})');
 
       final response = await apiClient.post(
         ApiEndpoints.initiatePayment,
-        data: request.toJson(),
+        data: requestJson,
       );
 
       print('✅ Initiate Payment Response Status: ${response.statusCode}');

@@ -19,6 +19,8 @@ class ApplicationFormData extends ChangeNotifier {
 
   // Step 3 data
   String? paymentMethod;
+  int? applicationFee;
+  int? verificationFee;
 
   // Application ID after creation
   String? applicationId;
@@ -74,6 +76,8 @@ class ApplicationFormData extends ChangeNotifier {
     letterFromTraditionalRulerPath = null;
     paymentMethod = null;
     applicationId = null;
+    applicationFee = null;
+    verificationFee = null;
     notifyListeners();
   }
 }

@@ -129,7 +129,67 @@ class ApiExceptions with _$ApiExceptions {
               networkExceptions = const ApiExceptions.badRequest();
               break;
             case DioExceptionType.badResponse:
-              networkExceptions = const ApiExceptions.badRequest();
+              // Handle specific status codes
+              final statusCode = error.response?.statusCode;
+              if (statusCode == 413) {
+                // Request Entity Too Large
+                networkExceptions = const ApiExceptions.errorResponse(
+                  error:
+                      'File size too large. Please compress your files or use smaller files (max 10MB per file recommended).',
+                );
+              } else if (error.response != null &&
+                  error.response!.data != null) {
+                final responseData = error.response!.data;
+                if (responseData is Map<String, dynamic>) {
+                  // Check for 'error' field
+                  if (responseData.containsKey('error')) {
+                    final errorMsg = responseData['error'];
+                    if (errorMsg is String) {
+                      networkExceptions =
+                          ApiExceptions.errorResponse(error: errorMsg);
+                    } else {
+                      networkExceptions = ApiExceptions.errorResponse(
+                        error: errorMsg.toString(),
+                      );
+                    }
+                  } else if (responseData.containsKey('message')) {
+                    final errorMsg = responseData['message'];
+                    networkExceptions = ApiExceptions.errorResponse(
+                      error: errorMsg.toString(),
+                    );
+                  } else {
+                    // Check if it's HTML response (like nginx error pages)
+                    if (responseData.toString().contains('413') ||
+                        responseData
+                            .toString()
+                            .contains('Request Entity Too Large')) {
+                      networkExceptions = const ApiExceptions.errorResponse(
+                        error:
+                            'File size too large. Please compress your files or use smaller files (max 10MB per file recommended).',
+                      );
+                    } else {
+                      // Fallback to badRequest if no error message found
+                      networkExceptions = const ApiExceptions.badRequest();
+                    }
+                  }
+                } else if (responseData is String) {
+                  // Check if HTML response contains 413 error
+                  if (responseData.contains('413') ||
+                      responseData.contains('Request Entity Too Large')) {
+                    networkExceptions = const ApiExceptions.errorResponse(
+                      error:
+                          'File size too large. Please compress your files or use smaller files (max 10MB per file recommended).',
+                    );
+                  } else {
+                    networkExceptions =
+                        ApiExceptions.errorResponse(error: responseData);
+                  }
+                } else {
+                  networkExceptions = const ApiExceptions.badRequest();
+                }
+              } else {
+                networkExceptions = const ApiExceptions.badRequest();
+              }
               break;
             case DioExceptionType.connectionError:
               networkExceptions = const ApiExceptions.unableToProcess();

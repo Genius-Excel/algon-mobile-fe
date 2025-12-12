@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -9,7 +10,7 @@ import '../../../../core/service_exceptions/api_exceptions.dart';
 import '../../../../core/service_result/api_result.dart';
 import '../models/application_list_models.dart';
 import '../models/certificate_application_models.dart';
-import '../models/states_models.dart';
+import '../models/states_models.dart' as states_models;
 import '../models/update_application_models.dart';
 import 'application_repository.dart';
 
@@ -93,7 +94,19 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
     try {
       final dio = ref.read(dioProvider);
 
-      final formDataToSend = FormData.fromMap(formData);
+      final formDataToSend = FormData();
+
+      // Add regular form fields
+      for (final entry in formData.entries) {
+        if (entry.key == 'extra_fields' && entry.value is List) {
+          // Convert extra_fields list to JSON string
+          final extraFieldsJson = jsonEncode(entry.value);
+          formDataToSend.fields.add(MapEntry(entry.key, extraFieldsJson));
+        } else {
+          formDataToSend.fields
+              .add(MapEntry(entry.key, entry.value.toString()));
+        }
+      }
 
       // Add files to FormData
       for (final fileEntry in files) {
@@ -111,7 +124,8 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       }
 
       print('🚀 Update Certificate Application API Call:');
-      print('   Endpoint: ${ApiEndpoints.updateCertificateApplication(applicationId)}');
+      print(
+          '   Endpoint: ${ApiEndpoints.updateCertificateApplication(applicationId)}');
       print('   Application ID: $applicationId');
       print('   FormData keys: ${formData.keys}');
       print('   Files: ${files.map((e) => e.key).toList()}');
@@ -175,10 +189,19 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       print('✅ Get Applications Response Status: ${response.statusCode}');
       print('   Response Data: ${response.data}');
 
+      final responseData = response.data as Map<String, dynamic>;
+
+      // Handle paginated response structure: {message: "...", data: {count, next, previous, results: [...]}}
+      if (responseData.containsKey('data')) {
+        final dataValue = responseData['data'];
+        if (dataValue is Map && dataValue.containsKey('results')) {
+          // Extract results from paginated response
+          responseData['data'] = dataValue['results'];
+        }
+      }
+
       return Success(
-        data: ApplicationListResponse.fromJson(
-          response.data as Map<String, dynamic>,
-        ),
+        data: ApplicationListResponse.fromJson(responseData),
       );
     } on DioException catch (e) {
       print('❌ Get Applications Error:');
@@ -237,21 +260,147 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
   }
 
   @override
-  Future<ApiResult<StatesResponse>> getAllStates() async {
+  Future<ApiResult<states_models.StatesResponse>> getAllStates() async {
     try {
       final apiClient = ref.read(apiClientProvider);
 
       print('🚀 Get All States API Call:');
       print('   Endpoint: ${ApiEndpoints.allStates}');
 
-      final response = await apiClient.get(ApiEndpoints.allStates);
+      // Fetch all states by requesting a large page size or all pages
+      final response = await apiClient.get(
+        ApiEndpoints.allStates,
+        queryParameters: {
+          'page_size': 1000, // Request a large page size to get all states
+        },
+      );
 
       print('✅ Get All States Response Status: ${response.statusCode}');
       print('   Response Data: ${response.data}');
+      print('   Response Data Type: ${response.data.runtimeType}');
 
-      return Success(
-        data: StatesResponse.fromJson(response.data as Map<String, dynamic>),
-      );
+      final responseData = response.data as Map<String, dynamic>;
+      List<Map<String, dynamic>> allStatesJson = [];
+
+      // Handle paginated response structure: {message: "...", data: {count, next, previous, results: [...]}}
+      if (responseData.containsKey('data')) {
+        final dataValue = responseData['data'];
+
+        if (dataValue is Map) {
+          final dataMap = dataValue as Map<String, dynamic>;
+          print('   Data is a Map, checking for pagination structure...');
+          print('   Data Map Keys: ${dataMap.keys.toList()}');
+          print('   Count: ${dataMap['count']}');
+          print('   Next: ${dataMap['next']}');
+          print('   Previous: ${dataMap['previous']}');
+
+          // Check for paginated response with 'results' key (most common)
+          if (dataMap.containsKey('results') && dataMap['results'] is List) {
+            final results = dataMap['results'] as List;
+            print('   Found ${results.length} states in results');
+
+            // Store first page results as raw JSON maps (don't parse yet)
+            for (final item in results) {
+              if (item is Map<String, dynamic>) {
+                allStatesJson.add(item);
+              }
+            }
+
+            // If there's a next page, fetch all remaining pages
+            String? nextUrl = dataMap['next']?.toString();
+            int page = 2; // Start from page 2 since we already have page 1
+
+            while (nextUrl != null && nextUrl.isNotEmpty) {
+              print('   Fetching page $page: $nextUrl');
+              try {
+                // Use Dio directly to handle full URLs or relative paths
+                final dio = ref.read(dioProvider);
+                final nextResponse = await dio.get(nextUrl);
+                final nextData = nextResponse.data as Map<String, dynamic>;
+
+                if (nextData.containsKey('data')) {
+                  final nextDataValue = nextData['data'];
+                  if (nextDataValue is Map) {
+                    final nextDataMap = nextDataValue as Map<String, dynamic>;
+                    if (nextDataMap.containsKey('results') &&
+                        nextDataMap['results'] is List) {
+                      final nextResults = nextDataMap['results'] as List;
+                      print('   Found ${nextResults.length} more states');
+
+                      // Store next page results as raw JSON maps (don't parse yet)
+                      for (final item in nextResults) {
+                        if (item is Map<String, dynamic>) {
+                          allStatesJson.add(item);
+                        }
+                      }
+                    }
+                    nextUrl = nextDataMap['next']?.toString();
+                    page++;
+
+                    // Safety check: limit to 50 pages max (should be more than enough for all Nigerian states)
+                    if (page > 50) {
+                      print(
+                          '   ⚠️ Reached maximum page limit (50), stopping pagination');
+                      break;
+                    }
+                  } else {
+                    break;
+                  }
+                } else {
+                  break;
+                }
+              } catch (e) {
+                print('   ⚠️ Error fetching next page: $e');
+                break;
+              }
+            }
+
+            responseData['data'] = allStatesJson;
+            print('   Total states fetched: ${allStatesJson.length}');
+          }
+          // Check if there's a nested 'states' key
+          else if (dataMap.containsKey('states') && dataMap['states'] is List) {
+            responseData['data'] = dataMap['states'];
+            print('   Found nested "states" key, using it as data');
+          }
+          // Check if there's a nested 'data' key
+          else if (dataMap.containsKey('data') && dataMap['data'] is List) {
+            responseData['data'] = dataMap['data'];
+            print('   Found nested "data" key, using it as data');
+          }
+          // If data is a single state object, wrap it in a list
+          else if (dataMap.containsKey('id') && dataMap.containsKey('name')) {
+            responseData['data'] = [dataMap];
+            print(
+                '   Data appears to be a single state object, wrapping in list');
+          }
+          // Fallback: wrap the whole object (shouldn't happen)
+          else {
+            responseData['data'] = [dataMap];
+            print('   ⚠️ Unknown structure, wrapping data map in list');
+          }
+        } else if (dataValue is List) {
+          // Data is already a list, use it directly
+          print('   Data is already a List, using directly');
+          responseData['data'] = dataValue;
+        } else {
+          print('   ⚠️ Data is neither Map nor List: ${dataValue.runtimeType}');
+          // Try to convert to list if possible
+          responseData['data'] = [dataValue];
+        }
+      }
+
+      try {
+        return Success(
+          data: states_models.StatesResponse.fromJson(responseData),
+        );
+      } catch (e, stackTrace) {
+        print('❌ Error parsing StatesResponse:');
+        print('   Error: $e');
+        print('   Response Data Structure: $responseData');
+        print('   StackTrace: $stackTrace');
+        rethrow;
+      }
     } on DioException catch (e) {
       print('❌ Get All States Error:');
       print('   Type: ${e.type}');
@@ -276,4 +425,3 @@ final applicationRepositoryImplProvider =
     Provider<ApplicationRepository>((ref) {
   return ApplicationRepositoryImpl(ref);
 });
-

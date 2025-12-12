@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/service_result/api_result.dart';
 import '../models/application_list_models.dart';
 import '../models/certificate_application_models.dart';
-import '../models/states_models.dart';
+import '../models/states_models.dart' as states_models;
 import '../models/update_application_models.dart';
 import 'application_repository_impl.dart';
 
@@ -28,7 +28,7 @@ abstract class ApplicationRepository {
     String type,
   );
 
-  Future<ApiResult<StatesResponse>> getAllStates();
+  Future<ApiResult<states_models.StatesResponse>> getAllStates();
 }
 
 final applicationRepositoryProvider = Provider<ApplicationRepository>((ref) {

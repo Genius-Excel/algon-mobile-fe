@@ -31,8 +31,11 @@ class AuthRepositoryImpl implements AuthRepository {
           contentType: Headers.formUrlEncodedContentType,
         ),
       );
+      
+      // Handle response structure: {message: "...", data: {...}}
+      final responseData = response.data as Map<String, dynamic>;
       return Success(
-        data: LoginResponse.fromJson(response.data as Map<String, dynamic>),
+        data: LoginResponse.fromJson(responseData),
       );
     } on DioException catch (e) {
       return ApiFailure(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
@@ -28,8 +30,28 @@ class _NewApplicationStep2ScreenState
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _landmarkController = TextEditingController();
-  String? _selectedFileName;
-  String? _selectedFilePath;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-populate email and phone from Step 1 if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final formData = ref.read(applicationFormProvider);
+      if (formData.email != null && _emailController.text.isEmpty) {
+        _emailController.text = formData.email!;
+      }
+      if (formData.phoneNumber != null && _phoneController.text.isEmpty) {
+        _phoneController.text = formData.phoneNumber!;
+      }
+    });
+  }
+
+  String? _selectedLetterFileName;
+  String? _selectedLetterFilePath;
+  String? _selectedNinSlipFileName;
+  String? _selectedNinSlipFilePath;
+  String? _selectedProfilePhotoFileName;
+  String? _selectedProfilePhotoFilePath;
   bool _isLoading = false;
 
   @override
@@ -55,42 +77,65 @@ class _NewApplicationStep2ScreenState
       final formData = ref.read(applicationFormProvider);
       final applicationRepo = ref.read(applicationRepositoryProvider);
 
-      // Prepare form data for API
-      final apiFormData = <String, dynamic>{
-        'date_of_birth': formData.dateOfBirth!,
-        'email': _emailController.text.trim(),
-        'full_name': formData.fullName!,
-        'local_government': formData.localGovernment!,
-        'phone_number': _phoneController.text.trim(),
-        'state': formData.stateValue!,
-        'village': formData.village!,
-        'nin': formData.nin!,
-      };
-
-      if (_landmarkController.text.trim().isNotEmpty) {
-        apiFormData['landmark'] = _landmarkController.text.trim();
+      if (formData.applicationId == null) {
+        Toast.error(
+            'Application ID not found. Please go back to Step 1.', context);
+        setState(() => _isLoading = false);
+        return;
       }
+
+      // Prepare form data for PATCH request (Step 2)
+      final apiFormData = <String, dynamic>{};
 
       if (_addressController.text.trim().isNotEmpty) {
         apiFormData['residential_address'] = _addressController.text.trim();
       }
 
-      // Prepare files
-      final files = <MapEntry<String, String>>[];
-      if (_selectedFilePath != null) {
-        files.add(MapEntry('letter_from_traditional_ruler', _selectedFilePath!));
+      if (_landmarkController.text.trim().isNotEmpty) {
+        apiFormData['landmark'] = _landmarkController.text.trim();
       }
 
-      // Create application
-      final result = await applicationRepo.createCertificateApplication(
+      // Prepare extra_fields (if local government requires dynamic fields)
+      // For now, we'll leave it empty unless the API tells us what fields are needed
+      final extraFields = <Map<String, dynamic>>[];
+      if (extraFields.isNotEmpty) {
+        apiFormData['extra_fields'] = extraFields;
+      }
+
+      // Prepare files - all are required by API
+      final files = <MapEntry<String, String>>[];
+
+      if (_selectedLetterFilePath == null) {
+        Toast.error('Please upload letter from traditional ruler', context);
+        setState(() => _isLoading = false);
+        return;
+      }
+      if (_selectedNinSlipFilePath == null) {
+        Toast.error('Please upload NIN slip', context);
+        setState(() => _isLoading = false);
+        return;
+      }
+      if (_selectedProfilePhotoFilePath == null) {
+        Toast.error('Please upload profile photo', context);
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      files.add(
+          MapEntry('letter_from_traditional_ruler', _selectedLetterFilePath!));
+      files.add(MapEntry('nin_slip', _selectedNinSlipFilePath!));
+      files.add(MapEntry('profile_photo', _selectedProfilePhotoFilePath!));
+
+      // Update application via PATCH (Step 2)
+      final result = await applicationRepo.updateCertificateApplication(
+        formData.applicationId!,
         apiFormData,
         files,
       );
 
       result.when(
         success: (response) {
-          // Save application ID and Step 2 data
-          formData.setApplicationId(response.data.applicationId);
+          // Save Step 2 data and fees
           formData.setStep2Data(
             email: _emailController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
@@ -100,8 +145,12 @@ class _NewApplicationStep2ScreenState
             landmark: _landmarkController.text.trim().isNotEmpty
                 ? _landmarkController.text.trim()
                 : null,
-            letterFromTraditionalRulerPath: _selectedFilePath,
+            letterFromTraditionalRulerPath: _selectedLetterFilePath,
           );
+
+          // Store fees for Step 3
+          formData.applicationFee = response.data.fee.applicationFee?.toInt();
+          formData.verificationFee = response.data.verificationFee?.toInt();
 
           if (mounted) {
             Toast.success(response.message, context);
@@ -193,7 +242,8 @@ class _NewApplicationStep2ScreenState
                               return 'Phone number is required';
                             }
                             // Remove + and spaces for validation
-                            final cleaned = value.replaceAll(RegExp(r'[\s+]'), '');
+                            final cleaned =
+                                value.replaceAll(RegExp(r'[\s+]'), '');
                             if (cleaned.length < 10) {
                               return 'Please enter a valid phone number';
                             }
@@ -220,56 +270,30 @@ class _NewApplicationStep2ScreenState
                         ),
                         const ColSpacing(16),
                         const Text(
-                          'Upload Supporting Letter',
+                          'Required Documents',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.blackColor,
                           ),
                         ),
                         const ColSpacing(16),
-                        GestureDetector(
-                          onTap: _pickFile,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey[300]!,
-                                style: BorderStyle.solid,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.upload,
-                                  size: 48,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Upload letter from village head',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                if (_selectedFileName != null) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _selectedFileName!,
-                                    style: const TextStyle(
-                                      color: Color(0xFF065F46),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
+                        _buildFileUploader(
+                          label: 'Letter from Traditional Ruler',
+                          fileName: _selectedLetterFileName,
+                          onTap: _pickLetterFile,
+                        ),
+                        const ColSpacing(16),
+                        _buildFileUploader(
+                          label: 'NIN Slip',
+                          fileName: _selectedNinSlipFileName,
+                          onTap: _pickNinSlipFile,
+                        ),
+                        const ColSpacing(16),
+                        _buildFileUploader(
+                          label: 'Profile Photo',
+                          fileName: _selectedProfilePhotoFileName,
+                          onTap: _pickProfilePhotoFile,
                         ),
                       ],
                     ),
@@ -285,7 +309,8 @@ class _NewApplicationStep2ScreenState
                     child: CustomButton(
                       text: 'Back',
                       variant: ButtonVariant.outline,
-                      onPressed: _isLoading ? null : () => context.router.maybePop(),
+                      onPressed:
+                          _isLoading ? null : () => context.router.maybePop(),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -306,15 +331,165 @@ class _NewApplicationStep2ScreenState
     );
   }
 
-  Future<void> _pickFile() async {
+  Widget _buildFileUploader({
+    required String label,
+    required String? fileName,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.blackColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: fileName != null ? AppColors.green : Colors.grey[300]!,
+                style: BorderStyle.solid,
+                width: fileName != null ? 1.5 : 0.5,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color:
+                  fileName != null ? AppColors.green.withOpacity(0.05) : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  fileName != null ? Icons.check_circle : Icons.upload,
+                  size: 24,
+                  color: fileName != null ? AppColors.green : Colors.grey[400],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fileName != null ? 'File selected' : 'Tap to upload',
+                        style: TextStyle(
+                          color: fileName != null
+                              ? AppColors.green
+                              : Colors.grey[600],
+                          fontSize: 14,
+                          fontWeight: fileName != null
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (fileName != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          fileName,
+                          style: const TextStyle(
+                            color: AppColors.green,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickLetterFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
     );
     if (result != null && result.files.single.path != null) {
-      setState(() {
-        _selectedFileName = result.files.single.name;
-        _selectedFilePath = result.files.single.path!;
-      });
+      final filePath = result.files.single.path!;
+      final fileSize =
+          await _checkFileSize(filePath, 'Letter from Traditional Ruler');
+      if (fileSize != null) {
+        setState(() {
+          _selectedLetterFileName = result.files.single.name;
+          _selectedLetterFilePath = filePath;
+        });
+      }
     }
+  }
+
+  Future<void> _pickNinSlipFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+    );
+    if (result != null && result.files.single.path != null) {
+      final filePath = result.files.single.path!;
+      final fileSize = await _checkFileSize(filePath, 'NIN Slip');
+      if (fileSize != null) {
+        setState(() {
+          _selectedNinSlipFileName = result.files.single.name;
+          _selectedNinSlipFilePath = filePath;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickProfilePhotoFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+    if (result != null && result.files.single.path != null) {
+      final filePath = result.files.single.path!;
+      final fileSize = await _checkFileSize(filePath, 'Profile Photo');
+      if (fileSize != null) {
+        setState(() {
+          _selectedProfilePhotoFileName = result.files.single.name;
+          _selectedProfilePhotoFilePath = filePath;
+        });
+      }
+    }
+  }
+
+  /// Check file size and return file path if valid, null if too large
+  /// Returns file size in MB for display, or null if file is too large
+  Future<double?> _checkFileSize(String filePath, String fileName) async {
+    try {
+      final file = File(filePath);
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        final fileSizeInMB = fileSize / (1024 * 1024); // Convert to MB
+
+        // Maximum file size: 10MB per file
+        const maxSizeMB = 10.0;
+
+        if (fileSizeInMB > maxSizeMB) {
+          if (mounted) {
+            Toast.error(
+              '$fileName is too large (${fileSizeInMB.toStringAsFixed(2)}MB). Maximum size is ${maxSizeMB}MB per file. Please compress or use a smaller file.',
+              context,
+              duration: 8,
+            );
+          }
+          return null;
+        }
+
+        return fileSizeInMB;
+      }
+    } catch (e) {
+      if (mounted) {
+        Toast.error('Error reading file: ${e.toString()}', context);
+      }
+    }
+    return null;
   }
 }

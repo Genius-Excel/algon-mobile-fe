@@ -8,6 +8,7 @@ class InitiatePaymentRequest {
   final String paymentType;
   @JsonKey(name: 'application_id')
   final String applicationId;
+  @JsonKey(includeIfNull: false)
   final int? amount;
 
   const InitiatePaymentRequest({
@@ -16,7 +17,14 @@ class InitiatePaymentRequest {
     this.amount,
   });
 
-  Map<String, dynamic> toJson() => _$InitiatePaymentRequestToJson(this);
+  Map<String, dynamic> toJson() {
+    final json = _$InitiatePaymentRequestToJson(this);
+    // Ensure amount is always an integer (not double) if present
+    if (json.containsKey('amount') && json['amount'] != null) {
+      json['amount'] = (json['amount'] as num).toInt();
+    }
+    return json;
+  }
 
   factory InitiatePaymentRequest.fromJson(Map<String, dynamic> json) =>
       _$InitiatePaymentRequestFromJson(json);
@@ -44,12 +52,10 @@ class PaymentData {
 
 @JsonSerializable()
 class InitiatePaymentResponse {
-  final bool status;
   final String message;
-  final PaymentData data;
+  final PaymentResponseData data;
 
   const InitiatePaymentResponse({
-    required this.status,
     required this.message,
     required this.data,
   });
@@ -58,5 +64,23 @@ class InitiatePaymentResponse {
       _$InitiatePaymentResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$InitiatePaymentResponseToJson(this);
+}
+
+@JsonSerializable()
+class PaymentResponseData {
+  final bool status;
+  final String message;
+  final PaymentData data;
+
+  const PaymentResponseData({
+    required this.status,
+    required this.message,
+    required this.data,
+  });
+
+  factory PaymentResponseData.fromJson(Map<String, dynamic> json) =>
+      _$PaymentResponseDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PaymentResponseDataToJson(this);
 }
 

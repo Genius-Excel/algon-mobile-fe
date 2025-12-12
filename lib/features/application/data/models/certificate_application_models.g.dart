@@ -35,23 +35,23 @@ Map<String, dynamic> _$CertificateApplicationRequestToJson(
     };
 
 UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
-      fullName: json['fullName'] as String,
-      dateOfBirth: json['dateOfBirth'] as String,
-      phoneNumber: json['phoneNumber'] as String,
+      fullName: json['full_name'] as String,
+      dateOfBirth: json['date_of_birth'] as String,
+      phoneNumber: json['phone_number'] as String,
       email: json['email'] as String,
       state: json['state'] as String,
-      localGovernment: json['localGovernment'] as String,
+      localGovernment: json['local_government'] as String,
       village: json['village'] as String,
       nin: json['nin'] as String,
     );
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
-      'fullName': instance.fullName,
-      'dateOfBirth': instance.dateOfBirth,
-      'phoneNumber': instance.phoneNumber,
+      'full_name': instance.fullName,
+      'date_of_birth': instance.dateOfBirth,
+      'phone_number': instance.phoneNumber,
       'email': instance.email,
       'state': instance.state,
-      'localGovernment': instance.localGovernment,
+      'local_government': instance.localGovernment,
       'village': instance.village,
       'nin': instance.nin,
     };
@@ -59,16 +59,16 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
 CertificateApplicationData _$CertificateApplicationDataFromJson(
         Map<String, dynamic> json) =>
     CertificateApplicationData(
-      userData: UserData.fromJson(json['userData'] as Map<String, dynamic>),
-      extraFields: json['extraFields'] as List<dynamic>,
+      userData: UserData.fromJson(json['user_data'] as Map<String, dynamic>),
+      extraFields: json['extra_fields'] as List<dynamic>,
       applicationId: json['application_id'] as String,
     );
 
 Map<String, dynamic> _$CertificateApplicationDataToJson(
         CertificateApplicationData instance) =>
     <String, dynamic>{
-      'userData': instance.userData,
-      'extraFields': instance.extraFields,
+      'user_data': instance.userData,
+      'extra_fields': instance.extraFields,
       'application_id': instance.applicationId,
     };
 

@@ -1,7 +1,8 @@
 import 'package:algon_mobile/core/enums/user_role.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/features/auth/data/models/register_models.dart';
-import 'package:algon_mobile/features/auth/data/repository/auth_repository_impl.dart';
+import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
+import 'package:algon_mobile/features/auth/data/services/auth_service_provider.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
@@ -69,13 +70,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     await Future.delayed(const Duration(milliseconds: 50));
 
     try {
-      print('📝 Starting signup process...');
-      print('   Role: ${_selectedRole?.label}');
-      print('   Email: ${_emailController.text.trim()}');
-      print('   Phone: ${_phoneController.text.trim()}');
-
-      final authRepository = ref.read(authRepositoryProvider);
-      print('✅ Auth repository obtained');
+      final authService = ref.read(authServiceProvider);
 
       final request = RegisterRequest(
         email: _emailController.text.trim(),
@@ -87,21 +82,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       );
 
       final apiRole = _selectedRole!.toApiRole();
-      print('🚀 Calling register API with role: $apiRole');
-
-      final result = await authRepository.register(request, apiRole);
-      print('📥 Register API call completed');
+      final result = await authService.registerAndLogin(
+        request: request,
+        role: apiRole,
+      );
 
       result.when(
-        success: (RegisterResponse response) {
+        success: (authResult) {
           if (mounted) {
-            Toast.success(response.message, context);
-            // Navigate to login after successful registration
-            Future.delayed(const Duration(seconds: 2), () {
-              if (mounted) {
-                context.router.pushNamed('/login');
-              }
-            });
+            Toast.success(authResult.message, context);
+            AuthService.navigateToRoleScreen(authResult.userRole, context);
           }
         },
         apiFailure: (error, statusCode) {
@@ -111,6 +101,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             } else {
               Toast.error(error.toString(), context);
             }
+            // Navigate to login on failure
+            Future.delayed(const Duration(seconds: 1), () {
+              if (mounted) {
+                context.router.pushNamed('/login');
+              }
+            });
           }
         },
       );

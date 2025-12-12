@@ -2,10 +2,10 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/shared/widgets/payment_webview_sheet.dart';
 import 'package:algon_mobile/features/digitization/presentation/providers/digitization_form_provider.dart';
 import 'package:algon_mobile/features/payment/data/repository/payment_repository.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
@@ -48,7 +48,7 @@ class _DigitizationStep3ScreenState
       // Initiate payment
       final result = await paymentRepo.initiatePayment(
         formData.applicationId!,
-        'application', // Using same payment type for digitization
+        'digitization',
         amount: _digitizationFee,
       );
 
@@ -58,15 +58,26 @@ class _DigitizationStep3ScreenState
             // Save payment method to provider
             formData.paymentMethod = _selectedPaymentMethod;
             
-            // Open payment URL
-            _openPaymentUrl(response.data.authorizationUrl);
-            
-            // Navigate to step 4 after a short delay to allow URL to open
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                context.router.pushNamed('/digitization/step4');
-              }
-            });
+            // Show payment WebView in bottom sheet
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => PaymentWebViewSheet(
+                paymentUrl: response.data.data.authorizationUrl,
+                onPaymentComplete: () {
+                  // Navigate to step 4 after payment completion
+                  if (mounted) {
+                    Toast.success('Payment completed successfully!', context);
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) {
+                        context.router.pushNamed('/digitization/step4');
+                      }
+                    });
+                  }
+                },
+              ),
+            );
           }
         },
         apiFailure: (error, statusCode) {
@@ -92,25 +103,6 @@ class _DigitizationStep3ScreenState
     }
   }
 
-  Future<void> _openPaymentUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        if (mounted) {
-          Toast.error('Could not open payment link', context);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Toast.error('Error opening payment link: ${e.toString()}', context);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

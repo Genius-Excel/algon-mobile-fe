@@ -3,10 +3,10 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/shared/widgets/payment_webview_sheet.dart';
 import 'package:algon_mobile/features/application/presentation/providers/application_form_provider.dart';
 import 'package:algon_mobile/features/payment/data/repository/payment_repository.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
@@ -24,7 +24,6 @@ class _NewApplicationStep3ScreenState
     extends ConsumerState<NewApplicationStep3Screen> {
   String? _selectedPaymentMethod;
   bool _isLoading = false;
-  static const int _applicationFee = 5000;
 
   Future<void> _initiatePayment() async {
     if (_selectedPaymentMethod == null) {
@@ -48,11 +47,24 @@ class _NewApplicationStep3ScreenState
     try {
       final paymentRepo = ref.read(paymentRepositoryProvider);
 
+      // Calculate total fee
+      final applicationFee = formData.applicationFee ?? 0;
+      final verificationFee = formData.verificationFee ?? 0;
+      final totalFee = applicationFee + verificationFee;
+
+      if (totalFee <= 0) {
+        Toast.error(
+            'Fee information not available. Please go back and try again.',
+            context);
+        setState(() => _isLoading = false);
+        return;
+      }
+
       // Initiate payment
       final result = await paymentRepo.initiatePayment(
         formData.applicationId!,
-        'application',
-        amount: _applicationFee,
+        'certificate',
+        amount: totalFee,
       );
 
       result.when(
@@ -61,15 +73,26 @@ class _NewApplicationStep3ScreenState
             // Save payment method to provider
             formData.paymentMethod = _selectedPaymentMethod;
 
-            // Open payment URL
-            _openPaymentUrl(response.data.authorizationUrl);
-
-            // Navigate to step 4 after a short delay to allow URL to open
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                context.router.pushNamed('/application/step4');
-              }
-            });
+            // Show payment WebView in bottom sheet
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => PaymentWebViewSheet(
+                paymentUrl: response.data.data.authorizationUrl,
+                onPaymentComplete: () {
+                  // Navigate to step 4 after payment completion
+                  if (mounted) {
+                    Toast.success('Payment completed successfully!', context);
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) {
+                        context.router.pushNamed('/application/step4');
+                      }
+                    });
+                  }
+                },
+              ),
+            );
           }
         },
         apiFailure: (error, statusCode) {
@@ -91,26 +114,6 @@ class _NewApplicationStep3ScreenState
         setState(() {
           _isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _openPaymentUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        if (mounted) {
-          Toast.error('Could not open payment link', context);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Toast.error('Error opening payment link: ${e.toString()}', context);
       }
     }
   }
@@ -144,36 +147,68 @@ class _NewApplicationStep3ScreenState
                         ),
                       ),
                       const ColSpacing(16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E3),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Application Fee',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.greyDark,
-                              ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final formData = ref.watch(applicationFormProvider);
+                          final applicationFee = formData.applicationFee ?? 0;
+                          final verificationFee = formData.verificationFee ?? 0;
+                          final totalFee = applicationFee + verificationFee;
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E3),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            const ColSpacing(16),
-                            Text(
-                              '₦${_applicationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.blackColor,
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Application Fee',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.greyDark,
+                                  ),
+                                ),
+                                const ColSpacing(16),
+                                if (applicationFee > 0 &&
+                                    verificationFee > 0) ...[
+                                  Text(
+                                    'Application Fee: ₦${applicationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.blackColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Verification Fee: ₦${verificationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.blackColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Divider(),
+                                  const SizedBox(height: 8),
+                                ],
+                                Text(
+                                  'Total: ₦${totalFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.blackColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
                       _PaymentOption(

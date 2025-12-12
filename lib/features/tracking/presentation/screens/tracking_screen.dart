@@ -1,13 +1,72 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/core/enums/application_status.dart';
 import 'package:algon_mobile/shared/widgets/bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
+import 'package:algon_mobile/features/application/data/models/application_list_models.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
+import 'package:algon_mobile/core/utils/date_formatter.dart';
 
 @RoutePage(name: 'Tracking')
-class TrackingScreen extends StatelessWidget {
+class TrackingScreen extends ConsumerStatefulWidget {
   const TrackingScreen({super.key});
+
+  @override
+  ConsumerState<TrackingScreen> createState() => _TrackingScreenState();
+}
+
+class _TrackingScreenState extends ConsumerState<TrackingScreen> {
+  bool _isLoading = true;
+  List<ApplicationItem> _applications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchApplications();
+  }
+
+  Future<void> _fetchApplications() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final result = await applicationRepo.getMyApplications();
+
+      result.when(
+        success: (response) {
+          setState(() {
+            _applications = response.data;
+            _isLoading = false;
+          });
+        },
+        apiFailure: (error, statusCode) {
+          setState(() {
+            _isLoading = false;
+          });
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        Toast.error('An unexpected error occurred: ${e.toString()}', context);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +79,7 @@ class TrackingScreen extends StatelessWidget {
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
               ),
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
               child: const Row(
                 children: [
                   Text(
@@ -38,7 +97,7 @@ class TrackingScreen extends StatelessWidget {
             Expanded(
               child: Container(
                 color: const Color(0xFFF9FAFB),
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -52,40 +111,51 @@ class TrackingScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     Expanded(
-                      child: ListView(
-                        children: const [
-                          _TrackingCard(
-                            id: 'CERT-2025-001',
-                            location: 'Ikeja LGA, Lagos',
-                            status: ApplicationStatus.approved,
-                            description:
-                                'Application approved. Certificate ready for download.',
-                            date: '2025-10-15',
-                            hasDownloadButton: true,
-                          ),
-                          SizedBox(height: 16),
-                          _TrackingCard(
-                            id: 'DIGI-2025-012',
-                            location: 'Ikeja LGA, Lagos',
-                            status: ApplicationStatus.approved,
-                            description:
-                                'Digitization complete. Digital certificate issued.',
-                            date: '2025-10-23',
-                            additionalStatus: ApplicationStatus.digitized,
-                            hasDownloadButton: true,
-                          ),
-                          SizedBox(height: 16),
-                          _TrackingCard(
-                            id: 'CERT-2025-002',
-                            location: 'Owerri Municipal, Imo',
-                            status: ApplicationStatus.pending,
-                            description:
-                                'Under review by local government admin.',
-                            date: '2025-10-20',
-                            hasDownloadButton: false,
-                          ),
-                        ],
-                      ),
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(),
+                            )
+                          : _applications.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.inbox_outlined,
+                                        size: 64,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No applications found',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : RefreshIndicator(
+                                  onRefresh: _fetchApplications,
+                                  child: ListView.builder(
+                                    itemCount: _applications.length,
+                                    itemBuilder: (context, index) {
+                                      final application = _applications[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom:
+                                              index < _applications.length - 1
+                                                  ? 16
+                                                  : 0,
+                                        ),
+                                        child: _TrackingCard(
+                                          application: application,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                     ),
                   ],
                 ),
@@ -100,23 +170,43 @@ class TrackingScreen extends StatelessWidget {
 }
 
 class _TrackingCard extends StatelessWidget {
-  final String id;
-  final String location;
-  final ApplicationStatus status;
-  final String description;
-  final String date;
-  final bool hasDownloadButton;
-  final ApplicationStatus? additionalStatus;
+  final ApplicationItem application;
 
   const _TrackingCard({
-    required this.id,
-    required this.location,
-    required this.status,
-    required this.description,
-    required this.date,
-    this.hasDownloadButton = false,
-    this.additionalStatus,
+    required this.application,
   });
+
+  ApplicationStatus get _status {
+    return ApplicationStatus.fromString(application.applicationStatus);
+  }
+
+  String get _location {
+    return '${application.localGovernment.name}, ${application.state.name}';
+  }
+
+  String get _description {
+    switch (_status) {
+      case ApplicationStatus.approved:
+        return 'Application approved. Certificate ready for download.';
+      case ApplicationStatus.rejected:
+        return application.remarks ?? 'Application has been rejected.';
+      case ApplicationStatus.digitized:
+        return 'Digitization complete. Digital certificate issued.';
+      case ApplicationStatus.underReview:
+        return 'Under review by local government admin.';
+      case ApplicationStatus.pending:
+      default:
+        if (application.paymentStatus == 'unpaid') {
+          return 'Payment pending. Please complete payment to proceed.';
+        }
+        return 'Application submitted and pending review.';
+    }
+  }
+
+  bool get _hasDownloadButton {
+    return _status == ApplicationStatus.approved ||
+        _status == ApplicationStatus.digitized;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +230,7 @@ class _TrackingCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  id,
+                  application.nin,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -148,42 +238,42 @@ class _TrackingCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (additionalStatus != null)
+              if (application.paymentStatus == 'paid')
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: additionalStatus!.backgroundColor,
+                    color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    additionalStatus!.label,
+                    'Paid',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: additionalStatus!.color,
+                      color: Colors.green.shade700,
                     ),
                   ),
                 ),
-              const SizedBox(width: 8),
+              if (application.paymentStatus == 'paid') const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: status.backgroundColor,
+                  color: _status.backgroundColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(status.icon, size: 14, color: status.color),
+                    Icon(_status.icon, size: 14, color: _status.color),
                     const SizedBox(width: 4),
                     Text(
-                      status.label,
+                      _status.label,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: status.color,
+                        color: _status.color,
                       ),
                     ),
                   ],
@@ -193,7 +283,7 @@ class _TrackingCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            location,
+            _location,
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF6B7280),
@@ -201,7 +291,7 @@ class _TrackingCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            description,
+            _description,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF1F2937),
@@ -209,13 +299,13 @@ class _TrackingCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            date,
+            DateFormatter.formatDisplayDate(application.createdAt),
             style: const TextStyle(
               fontSize: 12,
               color: Color(0xFF9CA3AF),
             ),
           ),
-          if (hasDownloadButton) ...[
+          if (_hasDownloadButton) ...[
             const SizedBox(height: 12),
             CustomButton(
               text: 'Download',
