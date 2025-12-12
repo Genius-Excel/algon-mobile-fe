@@ -40,16 +40,19 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
       result.when(
         success: (response) {
-          setState(() {
-            _applications = response.data;
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _applications = response.data;
+              _isLoading = false;
+            });
+            print('✅ Loaded ${_applications.length} applications in tracking screen');
+          }
         },
         apiFailure: (error, statusCode) {
-          setState(() {
-            _isLoading = false;
-          });
           if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
             if (error is ApiExceptions) {
               Toast.apiError(error, context);
             } else {
@@ -229,13 +232,26 @@ class _TrackingCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  application.nin,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      application.fullName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'NIN: ${application.nin}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (application.paymentStatus == 'paid')

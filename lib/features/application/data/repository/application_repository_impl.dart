@@ -187,22 +187,52 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       );
 
       print('✅ Get Applications Response Status: ${response.statusCode}');
-      print('   Response Data: ${response.data}');
-
+      print('   Response Data Type: ${response.data.runtimeType}');
+      
       final responseData = response.data as Map<String, dynamic>;
+      print('   Response Keys: ${responseData.keys.toList()}');
 
       // Handle paginated response structure: {message: "...", data: {count, next, previous, results: [...]}}
       if (responseData.containsKey('data')) {
         final dataValue = responseData['data'];
-        if (dataValue is Map && dataValue.containsKey('results')) {
-          // Extract results from paginated response
-          responseData['data'] = dataValue['results'];
+        print('   Data Type: ${dataValue.runtimeType}');
+        
+        if (dataValue is Map<String, dynamic>) {
+          print('   Data Map Keys: ${dataValue.keys.toList()}');
+          
+          // Check for paginated response with 'results' key
+          if (dataValue.containsKey('results') && dataValue['results'] is List) {
+            final results = dataValue['results'] as List;
+            print('   Found paginated response with ${results.length} results');
+            // Extract results from paginated response
+            responseData['data'] = results;
+          } else {
+            print('   Data is a Map but no results key found, treating as direct list');
+            // If data is a Map but not paginated, check if it should be a list
+            if (!dataValue.containsKey('results')) {
+              // Keep original structure if it's not paginated
+              print('   Keeping original data structure');
+            }
+          }
+        } else if (dataValue is List) {
+          print('   Data is already a List with ${dataValue.length} items');
+          // Data is already a list, no transformation needed
         }
       }
 
-      return Success(
-        data: ApplicationListResponse.fromJson(responseData),
-      );
+      print('   Final Data Type: ${responseData['data'].runtimeType}');
+      if (responseData['data'] is List) {
+        final dataList = responseData['data'] as List;
+        print('   Final Data Length: ${dataList.length}');
+        if (dataList.isNotEmpty) {
+          print('   First Item Keys: ${(dataList.first as Map).keys.toList()}');
+        }
+      }
+
+      final parsedResponse = ApplicationListResponse.fromJson(responseData);
+      print('✅ Successfully parsed ${parsedResponse.data.length} applications');
+      
+      return Success(data: parsedResponse);
     } on DioException catch (e) {
       print('❌ Get Applications Error:');
       print('   Type: ${e.type}');
@@ -218,7 +248,18 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       print('❌ Unexpected Get Applications Error:');
       print('   Error: $e');
       print('   StackTrace: $stackTrace');
-      rethrow;
+      
+      // Provide more context for parsing errors
+      if (e.toString().contains('type') || e.toString().contains('cast')) {
+        print('   This looks like a JSON parsing error. Check the API response structure.');
+      }
+      
+      return ApiFailure(
+        error: ApiExceptions.errorResponse(
+          error: 'Failed to parse applications: ${e.toString()}',
+        ),
+        statusCode: -1,
+      );
     }
   }
 
