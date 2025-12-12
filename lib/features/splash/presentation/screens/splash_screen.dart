@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
-import '../../../../core/router/router.dart';
+import '../../../../features/auth/data/services/auth_service.dart';
 
 @RoutePage(name: 'splash')
 class SplashScreen extends StatefulWidget {
@@ -15,10 +15,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 2000), () {
-      if (!mounted) return;
-      context.router.replace(const Login());
-    });
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    // Wait for splash animation (2 seconds)
+    await Future.delayed(const Duration(milliseconds: 2000));
+    
+    if (!mounted) return;
+    
+    // Check if user is logged in and navigate accordingly
+    await AuthService.checkLoginAndNavigate(context);
   }
 
   @override

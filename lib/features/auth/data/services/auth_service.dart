@@ -1,4 +1,5 @@
 import 'package:algon_mobile/core/enums/user_role.dart';
+import 'package:algon_mobile/core/router/router.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/core/service_result/api_result.dart';
 import 'package:algon_mobile/features/auth/data/models/login_models.dart';
@@ -124,16 +125,101 @@ class AuthService {
     }
   }
 
+  /// Check if user is logged in by checking stored tokens
+  static Future<bool> isLoggedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      final accessToken = prefs.getString('access_token');
+      
+      // User is logged in if flag is true AND token exists
+      return isLoggedIn && accessToken != null && accessToken.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get stored user role
+  static Future<UserRole?> getStoredUserRole() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final roleString = prefs.getString('user_role');
+      
+      if (roleString != null && roleString.isNotEmpty) {
+        return UserRole.fromApiRole(roleString);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Clear all stored authentication data (logout)
+  static Future<void> logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+      await prefs.remove('user_id');
+      await prefs.remove('user_role');
+      await prefs.setBool('isLoggedIn', false);
+    } catch (e) {
+      // Ignore errors during logout
+    }
+  }
+
   /// Navigate to appropriate screen based on user role
-  static void navigateToRoleScreen(UserRole role, BuildContext context) {
+  static void navigateToRoleScreen(UserRole role, BuildContext context, {bool replace = false}) {
     if (role == UserRole.superAdmin) {
-      context.router.pushNamed('/super-admin/dashboard');
+      if (replace) {
+        context.router.replaceNamed('/super-admin/dashboard');
+      } else {
+        context.router.pushNamed('/super-admin/dashboard');
+      }
     } else if (role == UserRole.lgAdmin) {
-      context.router.pushNamed('/admin/dashboard');
+      if (replace) {
+        context.router.replaceNamed('/admin/dashboard');
+      } else {
+        context.router.pushNamed('/admin/dashboard');
+      }
     } else if (role == UserRole.immigrationOfficer) {
-      context.router.pushNamed('/verify/certificate');
+      if (replace) {
+        context.router.replaceNamed('/verify/certificate');
+      } else {
+        context.router.pushNamed('/verify/certificate');
+      }
     } else {
-      context.router.pushNamed('/home');
+      if (replace) {
+        context.router.replaceNamed('/home');
+      } else {
+        context.router.pushNamed('/home');
+      }
+    }
+  }
+
+  /// Check login status and navigate accordingly (for splash screen)
+  static Future<void> checkLoginAndNavigate(BuildContext context) async {
+    final loggedIn = await isLoggedIn();
+    
+    if (loggedIn) {
+      // User is logged in, get their role and navigate
+      final userRole = await getStoredUserRole();
+      
+      if (userRole != null && context.mounted) {
+        // Use replace=true to prevent back navigation to splash/login
+        navigateToRoleScreen(userRole, context, replace: true);
+      } else {
+        // Role not found, clear invalid session and go to login
+        await logout();
+        if (context.mounted) {
+          context.router.replace(const Login());
+        }
+      }
+    } else {
+      // User is not logged in, go to login screen
+      if (context.mounted) {
+        context.router.replace(const Login());
+      }
     }
   }
 }
