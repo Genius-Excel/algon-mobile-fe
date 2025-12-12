@@ -26,6 +26,8 @@ class ApiEndpoints {
 
   // Super Admin endpoints
   static const String inviteLGAdmin = '/admin/super/invite-lg';
+  // Note: Endpoint may vary - common patterns: /admin/super/lgas, /admin/super/lg-admins, /admin/super/local-governments
+  static const String listLGAdmins = '/admin/super/lgas';
   static const String auditLogs = '/admin/super/audit-logs';
   static String auditLog(String id) => '/admin/super/audit-log/$id';
   static const String superAdminDashboard = '/admin/super/dashboard';

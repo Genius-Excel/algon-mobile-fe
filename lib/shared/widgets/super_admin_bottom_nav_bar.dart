@@ -65,7 +65,7 @@ class SuperAdminBottomNavBar extends StatelessWidget {
                 isActive: currentIndex == 3,
                 onTap: () {
                   if (currentIndex != 3) {
-                    context.router.pushNamed('/admin/settings');
+                    context.router.pushNamed('/super-admin/system-settings');
                   }
                 },
               ),
@@ -116,4 +116,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-

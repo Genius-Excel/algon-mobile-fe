@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
 
 @RoutePage(name: 'SystemSettings')
 class SystemSettingsScreen extends StatefulWidget {
@@ -161,6 +163,46 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      _SettingsSection(
+                        title: 'Account',
+                        children: [
+                          _LogoutButton(
+                            onTap: () async {
+                              // Show confirmation dialog
+                              final shouldLogout = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Logout'),
+                                  content: const Text(
+                                    'Are you sure you want to logout?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Logout'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (shouldLogout == true && context.mounted) {
+                                await AuthService.logout();
+                                if (context.mounted) {
+                                  context.router.replaceNamed('/login');
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -184,6 +226,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const SuperAdminBottomNavBar(currentIndex: 3),
     );
   }
 }
@@ -277,6 +320,67 @@ class _ToggleSetting extends StatelessWidget {
           activeColor: AppColors.green,
         ),
       ],
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _LogoutButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEBEE),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.logout,
+                color: Color(0xFFEF4444),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFEF4444),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Sign out of super admin panel',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Color(0xFF9CA3AF),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

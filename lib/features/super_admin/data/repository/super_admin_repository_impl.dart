@@ -8,6 +8,7 @@ import '../../../../core/service_result/api_result.dart';
 import '../models/audit_log_models.dart';
 import '../models/dashboard_models.dart';
 import '../models/invite_lg_admin_models.dart';
+import '../models/lg_admin_list_models.dart';
 import 'super_admin_repository.dart';
 
 class SuperAdminRepositoryImpl implements SuperAdminRepository {
@@ -54,6 +55,61 @@ class SuperAdminRepositoryImpl implements SuperAdminRepository {
       );
     } catch (e, stackTrace) {
       print('❌ Unexpected Invite LG Admin Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApiResult<LGAdminListResponse>> getLGAdmins({
+    String? search,
+    String? state,
+    String? lga,
+  }) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      final queryParams = <String, dynamic>{};
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      if (state != null && state.isNotEmpty) {
+        queryParams['state'] = state;
+      }
+      if (lga != null && lga.isNotEmpty) {
+        queryParams['lga'] = lga;
+      }
+
+      print('🚀 Get LG Admins API Call:');
+      print('   Endpoint: ${ApiEndpoints.listLGAdmins}');
+      print('   Query Params: $queryParams');
+
+      final response = await apiClient.get(
+        ApiEndpoints.listLGAdmins,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+
+      print('✅ Get LG Admins Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return Success(
+        data: LGAdminListResponse.fromJson(
+            response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('❌ Get LG Admins Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Get LG Admins Error:');
       print('   Error: $e');
       print('   StackTrace: $stackTrace');
       rethrow;

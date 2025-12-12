@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import 'package:algon_mobile/features/application/data/repository/application_re
 import 'package:algon_mobile/features/application/data/models/states_models.dart';
 import 'package:algon_mobile/features/super_admin/data/repository/super_admin_repository.dart';
 import 'package:algon_mobile/features/super_admin/data/models/invite_lg_admin_models.dart';
+import 'package:algon_mobile/features/super_admin/data/models/lg_admin_list_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'ManageLGAdmins')
@@ -25,11 +27,36 @@ class ManageLGAdminsScreen extends ConsumerStatefulWidget {
 class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
   final _searchController = TextEditingController();
   List<StateData> _states = [];
+  List<LGAdminListItem> _lgAdmins = [];
+  bool _isLoading = true;
+  String _searchQuery = '';
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _fetchStates();
+    _fetchLGAdmins();
+
+    // Listen to search changes with debounce
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (query != _searchQuery) {
+      _searchQuery = query;
+
+      // Cancel previous timer
+      _searchDebounce?.cancel();
+
+      // Debounce search: wait 500ms after user stops typing
+      _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _fetchLGAdmins();
+        }
+      });
+    }
   }
 
   Future<void> _fetchStates() async {
@@ -62,17 +89,128 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
     }
   }
 
+  Future<void> _fetchLGAdmins() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final superAdminRepo = ref.read(superAdminRepositoryProvider);
+      final result = await superAdminRepo.getLGAdmins(
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _lgAdmins = response.data;
+              _isLoading = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          // If 404, fallback to using states data to show all LGAs
+          if (statusCode == 404) {
+            _fetchLGAdminsFromStates();
+            return;
+          }
+
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (error is ApiExceptions) {
+              // Only show error if it's not a 404 (endpoint doesn't exist yet)
+              if (statusCode != 404) {
+                Toast.apiError(error, context);
+              }
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        Toast.error('Failed to load LG admins: ${e.toString()}', context);
+      }
+    }
+  }
+
+  /// Fallback: Build LG Admin list from states data when endpoint doesn't exist
+  void _fetchLGAdminsFromStates() {
+    if (_states.isEmpty) {
+      // Wait for states to load first
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _fetchLGAdminsFromStates();
+        }
+      });
+      return;
+    }
+
+    final List<LGAdminListItem> lgAdminsList = [];
+
+    for (final state in _states) {
+      for (final lg in state.localGovernments) {
+        // Filter by search query if provided
+        if (_searchQuery.isNotEmpty) {
+          final query = _searchQuery.toLowerCase();
+          final matchesLg = lg.name.toLowerCase().contains(query);
+          final matchesState = state.name.toLowerCase().contains(query);
+
+          if (!matchesLg && !matchesState) {
+            continue;
+          }
+        }
+
+        lgAdminsList.add(LGAdminListItem(
+          id: lg.id,
+          name: lg.name,
+          state: state.name,
+          stateId: state.id,
+          localGovernment: lg.name,
+          localGovernmentId: lg.id,
+          adminName: null, // No admin data available yet
+          adminEmail: null,
+          adminId: null,
+          applicationsCount: null,
+          isActive: false, // Mark as inactive until we have real data
+          createdAt: null,
+          updatedAt: null,
+        ));
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _lgAdmins = lgAdminsList;
+        _isLoading = false;
+      });
+    }
+  }
+
   void _showInviteDialog() {
     showDialog(
       context: context,
       builder: (context) => _InviteLGAdminDialog(
         states: _states,
+        onInvited: () {
+          // Refresh the list after inviting
+          _fetchLGAdmins();
+        },
       ),
     );
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -108,7 +246,7 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '774 Local Governments',
+                          '${_lgAdmins.length} Local Government${_lgAdmins.length != 1 ? 's' : ''}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.9),
@@ -133,46 +271,60 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
             Expanded(
               child: Container(
                 color: const Color(0xFFF9FAFB),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _LGAdminCard(
-                      name: 'Ikeja',
-                      state: 'Lagos State',
-                      adminName: 'Abubakar Ibrahim',
-                      applicationsCount: 185,
-                      isActive: true,
-                      onEdit: () {},
-                    ),
-                    const SizedBox(height: 12),
-                    _LGAdminCard(
-                      name: 'Owerri Municipal',
-                      state: 'Imo State',
-                      adminName: 'Chidinma Okafor',
-                      applicationsCount: 142,
-                      isActive: true,
-                      onEdit: () {},
-                    ),
-                    const SizedBox(height: 12),
-                    _LGAdminCard(
-                      name: 'Kano Municipal',
-                      state: 'Kano State',
-                      adminName: 'Mohammed Yusuf',
-                      applicationsCount: 267,
-                      isActive: true,
-                      onEdit: () {},
-                    ),
-                    const SizedBox(height: 12),
-                    _LGAdminCard(
-                      name: 'Port Harcourt',
-                      state: 'Rivers State',
-                      adminName: null,
-                      applicationsCount: null,
-                      isActive: false,
-                      onEdit: () {},
-                    ),
-                  ],
-                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _lgAdmins.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.inbox_outlined,
+                                    size: 64, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _searchQuery.isEmpty
+                                      ? 'No LG Admins found'
+                                      : 'No results found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                if (_searchQuery.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  TextButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                    },
+                                    child: const Text('Clear search'),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _fetchLGAdmins,
+                            child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                ..._lgAdmins.map((lgAdmin) => Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 12),
+                                      child: _LGAdminCard(
+                                        name: lgAdmin.localGovernment,
+                                        state: lgAdmin.state,
+                                        adminName: lgAdmin.adminName,
+                                        applicationsCount:
+                                            lgAdmin.applicationsCount,
+                                        isActive: lgAdmin.isActive,
+                                        onEdit: () {
+                                          // TODO: Implement edit functionality
+                                        },
+                                      ),
+                                    )),
+                              ],
+                            ),
+                          ),
               ),
             ),
           ],
@@ -194,8 +346,12 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
 
 class _InviteLGAdminDialog extends ConsumerStatefulWidget {
   final List<StateData> states;
+  final VoidCallback? onInvited;
 
-  const _InviteLGAdminDialog({required this.states});
+  const _InviteLGAdminDialog({
+    required this.states,
+    this.onInvited,
+  });
 
   @override
   ConsumerState<_InviteLGAdminDialog> createState() =>
@@ -253,7 +409,7 @@ class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
           if (mounted) {
             Toast.success(response.message, context);
             Navigator.of(context).pop();
-            // TODO: Refresh the list of LG admins
+            widget.onInvited?.call();
           }
         },
         apiFailure: (error, statusCode) {
