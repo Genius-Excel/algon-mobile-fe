@@ -21,42 +21,56 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
   List<AuditLogItem> _auditLogs = [];
   bool _isLoading = false;
-  int _currentPage = 1;
-  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  String? _nextUrl;
+  final ScrollController _scrollController = ScrollController();
+  static const int _pageSize = 20;
 
   @override
   void initState() {
     super.initState();
     _fetchAuditLogs();
+    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _fetchAuditLogs({bool loadMore = false}) async {
-    if (!loadMore) {
-      setState(() {
-        _isLoading = true;
-        _currentPage = 1;
-      });
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent * 0.8 &&
+        _nextUrl != null &&
+        !_isLoadingMore) {
+      _loadMoreAuditLogs();
     }
+  }
+
+  Future<void> _fetchAuditLogs({bool refresh = false}) async {
+    if (refresh) {
+      _nextUrl = null;
+      _auditLogs.clear();
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final superAdminRepo = ref.read(superAdminRepositoryProvider);
       final result = await superAdminRepo.getAuditLogs(
-        page: loadMore ? _currentPage + 1 : 1,
-        pageSize: 20,
+        page: 1,
+        pageSize: _pageSize,
       );
 
       result.when(
         success: (response) {
           if (mounted) {
             setState(() {
-              if (loadMore) {
-                _auditLogs.addAll(response.data.results);
-                _currentPage++;
-              } else {
-                _auditLogs = response.data.results;
-                _currentPage = 1;
-              }
-              _hasMore = response.data.next != null;
+              _auditLogs = response.data.results;
+              _nextUrl = response.data.next;
               _isLoading = false;
             });
           }
@@ -80,6 +94,52 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           _isLoading = false;
         });
         Toast.error('Failed to load audit logs: ${e.toString()}', context);
+      }
+    }
+  }
+
+  Future<void> _loadMoreAuditLogs() async {
+    if (_nextUrl == null || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final superAdminRepo = ref.read(superAdminRepositoryProvider);
+      // Calculate page number from current list length
+      final currentPage = (_auditLogs.length ~/ _pageSize) + 1;
+      final result = await superAdminRepo.getAuditLogs(
+        page: currentPage,
+        pageSize: _pageSize,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _auditLogs.addAll(response.data.results);
+              _nextUrl = response.data.next;
+              _isLoadingMore = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+            // Don't show error toast for pagination failures
+            print('❌ Failed to load more audit logs: $error');
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+        print('❌ Failed to load more audit logs: ${e.toString()}');
       }
     }
   }
@@ -202,22 +262,20 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                           ),
                         )
                       : RefreshIndicator(
-                          onRefresh: () => _fetchAuditLogs(),
+                          onRefresh: () => _fetchAuditLogs(refresh: true),
                           child: ListView.builder(
+                            controller: _scrollController,
                             padding: const EdgeInsets.all(16),
-                            itemCount: _auditLogs.length + (_hasMore ? 1 : 0),
+                            itemCount:
+                                _auditLogs.length + (_nextUrl != null ? 1 : 0),
                             itemBuilder: (context, index) {
                               if (index == _auditLogs.length) {
                                 return Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
-                                    child: _isLoading
+                                    child: _isLoadingMore
                                         ? const CircularProgressIndicator()
-                                        : TextButton(
-                                            onPressed: () =>
-                                                _fetchAuditLogs(loadMore: true),
-                                            child: const Text('Load More'),
-                                          ),
+                                        : const SizedBox.shrink(),
                                   ),
                                 );
                               }

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
 
 @RoutePage(name: 'AdminSettings')
-class AdminSettingsScreen extends StatelessWidget {
+class AdminSettingsScreen extends StatefulWidget {
   final bool isSuperAdmin;
 
   const AdminSettingsScreen({
@@ -13,6 +14,11 @@ class AdminSettingsScreen extends StatelessWidget {
     this.isSuperAdmin = false,
   });
 
+  @override
+  State<AdminSettingsScreen> createState() => _AdminSettingsScreenState();
+}
+
+class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +33,7 @@ class AdminSettingsScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    isSuperAdmin ? 'ALGON Super Admin' : 'ALGON Admin',
+                    widget.isSuperAdmin ? 'ALGON Super Admin' : 'ALGON Admin',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -97,7 +103,43 @@ class AdminSettingsScreen extends StatelessWidget {
                               subtitle: 'Sign out of admin panel',
                               icon: Icons.logout,
                               textColor: const Color(0xFFEF4444),
-                              onTap: () {},
+                              onTap: () async {
+                                // Show confirmation dialog
+                                final shouldLogout = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext dialogContext) {
+                                    return AlertDialog(
+                                      title: const Text('Logout'),
+                                      content: const Text(
+                                        'Are you sure you want to logout?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(dialogContext)
+                                                .pop(false);
+                                          },
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(dialogContext)
+                                                .pop(true);
+                                          },
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                          ),
+                                          child: const Text('Logout'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (shouldLogout == true && context.mounted) {
+                                  await AuthService.logoutAndNavigate(context);
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -110,7 +152,7 @@ class AdminSettingsScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: isSuperAdmin
+      bottomNavigationBar: widget.isSuperAdmin
           ? const SuperAdminBottomNavBar(currentIndex: 3)
           : const AdminBottomNavBar(currentIndex: 3),
     );

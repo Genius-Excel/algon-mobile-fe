@@ -80,6 +80,18 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               } else {
                 _applications.addAll(response.data.results);
               }
+              // Sort by date (latest first)
+              _applications.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB
+                      .compareTo(dateA); // Descending order (newest first)
+                } catch (e) {
+                  // If parsing fails, maintain original order
+                  return 0;
+                }
+              });
               _nextUrl = response.data.next;
               _totalCount = response.data.count;
               _isLoading = false;
@@ -130,6 +142,18 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           if (mounted) {
             setState(() {
               _applications.addAll(response.data.results);
+              // Sort by date (latest first)
+              _applications.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB
+                      .compareTo(dateA); // Descending order (newest first)
+                } catch (e) {
+                  // If parsing fails, maintain original order
+                  return 0;
+                }
+              });
               _nextUrl = response.data.next;
               _isLoadingMore = false;
             });
