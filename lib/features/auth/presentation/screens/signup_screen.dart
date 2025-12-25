@@ -33,12 +33,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
-  // Available roles for signup (based on API docs)
   final List<UserRole> _availableRoles = [
     UserRole.applicant,
     UserRole.superAdmin,
-    UserRole.immigrationOfficer,
-    UserRole.lgAdmin,
   ];
 
   @override
