@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
@@ -175,7 +176,13 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
             ),
             Expanded(
               child: _isLoading && _auditLogs.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: List.generate(
+                        5,
+                        (index) => const ShimmerAuditLogItem(),
+                      ),
+                    )
                   : _auditLogs.isEmpty
                       ? Center(
                           child: Column(

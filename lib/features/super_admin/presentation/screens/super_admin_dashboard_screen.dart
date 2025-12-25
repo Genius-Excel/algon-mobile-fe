@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/super_admin/data/repository/super_admin_repository.dart';
@@ -132,7 +133,69 @@ class _SuperAdminDashboardScreenState
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Container(
+                      color: const Color(0xFFF9FAFB),
+                      child: const SingleChildScrollView(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title shimmer
+                            ShimmerContainer(
+                              width: 150,
+                              height: 28,
+                            ),
+                            SizedBox(height: 8),
+                            ShimmerContainer(
+                              width: 200,
+                              height: 16,
+                            ),
+                            SizedBox(height: 24),
+                            // Metric cards shimmer (2x2 grid)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ShimmerMetricCard(),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: ShimmerMetricCard(),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ShimmerMetricCard(),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: ShimmerMetricCard(),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+                            // Chart shimmer
+                            ShimmerChartCard(),
+                            SizedBox(height: 24),
+                            // Action buttons shimmer
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ShimmerActionButton(),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: ShimmerActionButton(),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    )
                   : _dashboardData == null
                       ? Center(
                           child: Column(

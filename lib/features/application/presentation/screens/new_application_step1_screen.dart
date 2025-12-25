@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/application/presentation/providers/application_form_provider.dart';
@@ -145,7 +146,35 @@ class _NewApplicationStep1ScreenState
               child: Container(
                 color: Colors.white,
                 child: _isLoadingStates
-                    ? const Center(child: CircularProgressIndicator())
+                    ? SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const ShimmerContainer(width: 150, height: 24),
+                            const SizedBox(height: 24),
+                            ...List.generate(
+                                9,
+                                (index) => Padding(
+                                      padding: EdgeInsets.only(
+                                          bottom: index < 8 ? 16 : 24),
+                                      child: const ShimmerFormField(),
+                                    )),
+                            const ShimmerContainer(width: 150, height: 14),
+                            const SizedBox(height: 16),
+                            ...List.generate(
+                                2,
+                                (index) => const Padding(
+                                      padding: EdgeInsets.only(bottom: 16),
+                                      child: ShimmerContainer(
+                                        width: double.infinity,
+                                        height: 56,
+                                      ),
+                                    )),
+                          ],
+                        ),
+                      )
                     : SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 15, vertical: 12),

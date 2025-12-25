@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/core/enums/application_status.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
@@ -132,7 +133,83 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Container(
+                      color: const Color(0xFFF9FAFB),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const ShimmerContainer(width: 150, height: 24),
+                            const SizedBox(height: 8),
+                            const ShimmerContainer(width: 200, height: 14),
+                            const SizedBox(height: 32),
+                            // Metric cards (2x2)
+                            const Row(
+                              children: [
+                                Expanded(child: ShimmerMetricCard()),
+                                SizedBox(width: 16),
+                                Expanded(child: ShimmerMetricCard()),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Row(
+                              children: [
+                                Expanded(child: ShimmerMetricCard()),
+                                SizedBox(width: 16),
+                                Expanded(child: ShimmerMetricCard()),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            // Chart title
+                            const ShimmerContainer(width: 180, height: 20),
+                            const SizedBox(height: 8),
+                            const ShimmerContainer(width: 250, height: 14),
+                            const SizedBox(height: 16),
+                            // Chart
+                            const ShimmerChartCard(),
+                            const SizedBox(height: 24),
+                            // Approval Statistics
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E3),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ShimmerContainer(width: 150, height: 14),
+                                  SizedBox(height: 4),
+                                  ShimmerContainer(width: 80, height: 28),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Recent Applications title
+                            const ShimmerContainer(width: 180, height: 20),
+                            const SizedBox(height: 16),
+                            // Recent applications shimmer
+                            ...List.generate(
+                              2,
+                              (index) => const Padding(
+                                padding: EdgeInsets.only(bottom: 12),
+                                child: ShimmerApplicationCard(),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Quick action buttons
+                            const Row(
+                              children: [
+                                Expanded(child: ShimmerActionButton()),
+                                SizedBox(width: 16),
+                                Expanded(child: ShimmerActionButton()),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                   : _dashboardData == null
                       ? Center(
                           child: Column(

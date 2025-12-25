@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
 import 'package:algon_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:algon_mobile/features/auth/data/models/user_profile_models.dart';
@@ -20,7 +21,6 @@ class ProfileScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
@@ -103,7 +103,8 @@ class ProfileScreen extends ConsumerWidget {
                                     child: Image.network(
                                       profile.profileImage!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
                                         return const Icon(
                                           Icons.person,
                                           size: 60,
@@ -149,9 +150,11 @@ class ProfileScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (profile.nin != null && profile.nin!.isNotEmpty)
+                                if (profile.nin != null &&
+                                    profile.nin!.isNotEmpty)
                                   _InfoRow(label: 'NIN', value: profile.nin!),
-                                if (profile.nin != null && profile.nin!.isNotEmpty)
+                                if (profile.nin != null &&
+                                    profile.nin!.isNotEmpty)
                                   const Divider(height: 24),
                                 if (profile.phoneNumber != null &&
                                     profile.phoneNumber!.isNotEmpty)
@@ -204,7 +207,8 @@ class ProfileScreen extends ConsumerWidget {
                                     actions: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.of(dialogContext).pop(false);
+                                          Navigator.of(dialogContext)
+                                              .pop(false);
                                         },
                                         child: const Text('Cancel'),
                                       ),
@@ -233,8 +237,12 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   );
                 },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
+                loading: () => SingleChildScrollView(
+                  child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(24),
+                    child: const ShimmerProfileCard(),
+                  ),
                 ),
                 error: (error, stackTrace) {
                   return Center(

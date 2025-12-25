@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/digitization/presentation/providers/digitization_form_provider.dart';
@@ -109,7 +110,25 @@ class _DigitizationStep1ScreenState
               child: Container(
                 color: Colors.white,
                 child: _isLoadingStates
-                    ? const Center(child: CircularProgressIndicator())
+                    ? SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const ShimmerContainer(width: 150, height: 24),
+                            const SizedBox(height: 8),
+                            const ShimmerContainer(width: 200, height: 14),
+                            const SizedBox(height: 24),
+                            ...List.generate(
+                                6,
+                                (index) => const Padding(
+                                      padding: EdgeInsets.only(bottom: 16),
+                                      child: ShimmerFormField(),
+                                    )),
+                          ],
+                        ),
+                      )
                     : SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 15, vertical: 12),
