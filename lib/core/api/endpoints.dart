@@ -32,4 +32,9 @@ class ApiEndpoints {
   // LG Admin endpoints
   static const String adminDashboard = '/admin/dashboard';
   static const String lgaFee = '/application-fees/local-government';
+  static String adminApplications(String applicationType) =>
+      '/admin/applications?application_type=$applicationType';
+  static String updateApplicationStatus(
+          String applicationId, String applicationType) =>
+      '/admin/applications/$applicationId?application_type=$applicationType';
 }

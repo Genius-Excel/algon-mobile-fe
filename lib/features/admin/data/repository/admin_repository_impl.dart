@@ -5,8 +5,10 @@ import '../../../../core/api/endpoints.dart';
 import '../../../../core/dependency_injection/di_providers.dart';
 import '../../../../core/service_exceptions/api_exceptions.dart';
 import '../../../../core/service_result/api_result.dart';
+import '../../../application/data/models/application_list_models.dart';
 import '../models/admin_dashboard_models.dart';
 import '../models/lga_fee_models.dart';
+import '../models/admin_application_models.dart';
 import 'admin_repository.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
@@ -139,6 +141,102 @@ class AdminRepositoryImpl implements AdminRepository {
       );
     } catch (e, stackTrace) {
       print('❌ Unexpected Create/Update LGA Fee Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApiResult<ApplicationListResponse>> getApplications({
+    required String applicationType,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      print('🚀 Get Admin Applications API Call:');
+      print('   Endpoint: ${ApiEndpoints.adminApplications(applicationType)}');
+      print('   Limit: $limit, Offset: $offset');
+
+      final response = await apiClient.get(
+        ApiEndpoints.adminApplications(applicationType),
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+
+      print('✅ Get Admin Applications Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return Success(
+        data: ApplicationListResponse.fromJson(
+            response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('❌ Get Admin Applications Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Get Admin Applications Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApiResult<UpdateApplicationStatusResponse>> updateApplicationStatus({
+    required String applicationId,
+    required String applicationType,
+    required String action,
+  }) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      print('🚀 Update Application Status API Call:');
+      print('   Endpoint: ${ApiEndpoints.updateApplicationStatus(applicationId, applicationType)}');
+      print('   Action: $action');
+
+      final request = UpdateApplicationStatusRequest(
+        applicationType: applicationType,
+        action: action,
+      );
+
+      final response = await apiClient.patch(
+        ApiEndpoints.updateApplicationStatus(applicationId, applicationType),
+        data: request.toJson(),
+      );
+
+      print('✅ Update Application Status Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return Success(
+        data: UpdateApplicationStatusResponse.fromJson(
+            response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('❌ Update Application Status Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Update Application Status Error:');
       print('   Error: $e');
       print('   StackTrace: $stackTrace');
       rethrow;
