@@ -5,6 +5,7 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/core/enums/application_status.dart';
 import 'package:algon_mobile/shared/widgets/bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
 import 'package:algon_mobile/features/application/data/models/application_list_models.dart';
@@ -21,31 +22,69 @@ class TrackingScreen extends ConsumerStatefulWidget {
 
 class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   bool _isLoading = true;
+  bool _isLoadingMore = false;
   List<ApplicationItem> _applications = [];
+  String? _nextUrl;
+  int _totalCount = 0;
+  final ScrollController _scrollController = ScrollController();
+  static const int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
     _fetchApplications();
+    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _fetchApplications() async {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent * 0.8 &&
+        _nextUrl != null &&
+        !_isLoadingMore) {
+      _loadMoreApplications();
+    }
+  }
+
+  Future<void> _fetchApplications({bool refresh = false}) async {
+    if (refresh) {
+      _nextUrl = null;
+      _applications.clear();
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
       final applicationRepo = ref.read(applicationRepositoryProvider);
-      final result = await applicationRepo.getMyApplications();
+      final offset =
+          refresh || _applications.isEmpty ? 0 : _applications.length;
+      final result = await applicationRepo.getMyApplications(
+        limit: _pageSize,
+        offset: offset,
+      );
 
       result.when(
         success: (response) {
           if (mounted) {
             setState(() {
-              _applications = response.data;
+              if (refresh) {
+                _applications = response.data.results;
+              } else {
+                _applications.addAll(response.data.results);
+              }
+              _nextUrl = response.data.next;
+              _totalCount = response.data.count;
               _isLoading = false;
             });
-            print('✅ Loaded ${_applications.length} applications in tracking screen');
+            print(
+                '✅ Loaded ${_applications.length}/$_totalCount applications in tracking screen');
           }
         },
         apiFailure: (error, statusCode) {
@@ -68,6 +107,50 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       if (mounted) {
         Toast.error('An unexpected error occurred: ${e.toString()}', context);
       }
+    }
+  }
+
+  Future<void> _loadMoreApplications() async {
+    if (_nextUrl == null || _isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final result = await applicationRepo.getMyApplications(
+        limit: _pageSize,
+        offset: _applications.length,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _applications.addAll(response.data.results);
+              _nextUrl = response.data.next;
+              _isLoadingMore = false;
+            });
+            print(
+                '✅ Loaded more: ${_applications.length}/$_totalCount applications');
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+            // Don't show error toast for pagination failures
+            print('❌ Failed to load more applications: $error');
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+      print('❌ Error loading more applications: $e');
     }
   }
 
@@ -100,7 +183,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             Expanded(
               child: Container(
                 color: const Color(0xFFF9FAFB),
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -115,8 +199,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     const SizedBox(height: 24),
                     Expanded(
                       child: _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(),
+                          ? ListView.builder(
+                              itemCount: 5,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: index < 4 ? 16 : 0,
+                                  ),
+                                  child: const ShimmerApplicationCard(),
+                                );
+                              },
                             )
                           : _applications.isEmpty
                               ? Center(
@@ -140,10 +232,22 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                                   ),
                                 )
                               : RefreshIndicator(
-                                  onRefresh: _fetchApplications,
+                                  onRefresh: () =>
+                                      _fetchApplications(refresh: true),
                                   child: ListView.builder(
-                                    itemCount: _applications.length,
+                                    controller: _scrollController,
+                                    itemCount: _applications.length +
+                                        (_isLoadingMore ? 1 : 0),
                                     itemBuilder: (context, index) {
+                                      if (index >= _applications.length) {
+                                        // Loading more indicator
+                                        return const Padding(
+                                          padding: EdgeInsets.all(16.0),
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
                                       final application = _applications[index];
                                       return Padding(
                                         padding: EdgeInsets.only(

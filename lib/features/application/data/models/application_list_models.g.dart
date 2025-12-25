@@ -83,13 +83,30 @@ Map<String, dynamic> _$ApplicationItemToJson(ApplicationItem instance) =>
       'approved_by': instance.approvedBy,
     };
 
+ApplicationListData _$ApplicationListDataFromJson(Map<String, dynamic> json) =>
+    ApplicationListData(
+      count: (json['count'] as num).toInt(),
+      next: json['next'] as String?,
+      previous: json['previous'] as String?,
+      results: (json['results'] as List<dynamic>)
+          .map((e) => ApplicationItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$ApplicationListDataToJson(
+        ApplicationListData instance) =>
+    <String, dynamic>{
+      'count': instance.count,
+      'next': instance.next,
+      'previous': instance.previous,
+      'results': instance.results,
+    };
+
 ApplicationListResponse _$ApplicationListResponseFromJson(
         Map<String, dynamic> json) =>
     ApplicationListResponse(
       message: json['message'] as String,
-      data: (json['data'] as List<dynamic>)
-          .map((e) => ApplicationItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      data: ApplicationListData.fromJson(json['data'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ApplicationListResponseToJson(

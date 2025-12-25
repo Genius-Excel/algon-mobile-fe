@@ -21,6 +21,8 @@ abstract class ApplicationRepository {
 
   Future<ApiResult<ApplicationListResponse>> getMyApplications({
     String? applicationType,
+    int? limit,
+    int? offset,
   });
 
   Future<ApiResult<void>> verifyNin(

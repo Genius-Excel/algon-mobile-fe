@@ -105,9 +105,29 @@ class ApplicationItem {
 }
 
 @JsonSerializable()
+class ApplicationListData {
+  final int count;
+  final String? next;
+  final String? previous;
+  final List<ApplicationItem> results;
+
+  const ApplicationListData({
+    required this.count,
+    this.next,
+    this.previous,
+    required this.results,
+  });
+
+  factory ApplicationListData.fromJson(Map<String, dynamic> json) =>
+      _$ApplicationListDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ApplicationListDataToJson(this);
+}
+
+@JsonSerializable()
 class ApplicationListResponse {
   final String message;
-  final List<ApplicationItem> data;
+  final ApplicationListData data;
 
   const ApplicationListResponse({
     required this.message,
