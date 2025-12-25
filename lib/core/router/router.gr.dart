@@ -266,6 +266,123 @@ class FirstOnboarding extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ForgotPasswordStep1Screen]
+class ForgotPasswordStep1 extends PageRouteInfo<void> {
+  const ForgotPasswordStep1({List<PageRouteInfo>? children})
+      : super(
+          ForgotPasswordStep1.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'ForgotPasswordStep1';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ForgotPasswordStep1Screen();
+    },
+  );
+}
+
+/// generated route for
+/// [ForgotPasswordStep2Screen]
+class ForgotPasswordStep2 extends PageRouteInfo<ForgotPasswordStep2Args> {
+  ForgotPasswordStep2({
+    Key? key,
+    required String email,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ForgotPasswordStep2.name,
+          args: ForgotPasswordStep2Args(
+            key: key,
+            email: email,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'ForgotPasswordStep2';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ForgotPasswordStep2Args>();
+      return ForgotPasswordStep2Screen(
+        key: args.key,
+        email: args.email,
+      );
+    },
+  );
+}
+
+class ForgotPasswordStep2Args {
+  const ForgotPasswordStep2Args({
+    this.key,
+    required this.email,
+  });
+
+  final Key? key;
+
+  final String email;
+
+  @override
+  String toString() {
+    return 'ForgotPasswordStep2Args{key: $key, email: $email}';
+  }
+}
+
+/// generated route for
+/// [ForgotPasswordStep3Screen]
+class ForgotPasswordStep3 extends PageRouteInfo<ForgotPasswordStep3Args> {
+  ForgotPasswordStep3({
+    Key? key,
+    required String email,
+    required String otp,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ForgotPasswordStep3.name,
+          args: ForgotPasswordStep3Args(
+            key: key,
+            email: email,
+            otp: otp,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'ForgotPasswordStep3';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ForgotPasswordStep3Args>();
+      return ForgotPasswordStep3Screen(
+        key: args.key,
+        email: args.email,
+        otp: args.otp,
+      );
+    },
+  );
+}
+
+class ForgotPasswordStep3Args {
+  const ForgotPasswordStep3Args({
+    this.key,
+    required this.email,
+    required this.otp,
+  });
+
+  final Key? key;
+
+  final String email;
+
+  final String otp;
+
+  @override
+  String toString() {
+    return 'ForgotPasswordStep3Args{key: $key, email: $email, otp: $otp}';
+  }
+}
+
+/// generated route for
 /// [FullScreenMapScreen]
 class FullScreenMap extends PageRouteInfo<void> {
   const FullScreenMap({List<PageRouteInfo>? children})

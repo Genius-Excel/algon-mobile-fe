@@ -45,4 +45,35 @@ class AuthInterceptor extends Interceptor {
 
     handler.next(options);
   }
+
+  @override
+  void onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    // Check if this is a 401 error and we're not already on a public/auth endpoint
+    if (err.response?.statusCode == 401 &&
+        !_shouldSkipAuth(err.requestOptions.path)) {
+      // Token expired or invalid - clear session and logout user
+      print('🔒 Token expired or invalid - logging out user');
+      await _clearSession();
+      handler.reject(err);
+    } else {
+      // Not a 401 or public endpoint, pass through the error
+      handler.reject(err);
+    }
+  }
+
+  Future<void> _clearSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+      await prefs.remove('user_id');
+      await prefs.remove('user_role');
+      await prefs.setBool('isLoggedIn', false);
+    } catch (e) {
+      // Ignore errors during cleanup
+    }
+  }
 }

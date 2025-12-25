@@ -34,7 +34,6 @@ class _NewApplicationStep2ScreenState
   @override
   void initState() {
     super.initState();
-    // Pre-populate email and phone from Step 1 if available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final formData = ref.read(applicationFormProvider);
       if (formData.email != null && _emailController.text.isEmpty) {

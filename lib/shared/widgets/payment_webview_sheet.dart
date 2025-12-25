@@ -191,13 +191,14 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
     print('🎉 Payment completed! Closing sheet...');
     _paymentCompleted = true;
     
-    // Show success message briefly, then close
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (mounted) {
-        Navigator.of(context).pop();
+    // Close the sheet first, then call the callback
+    if (mounted) {
+      Navigator.of(context).pop();
+      // Use microtask to ensure the sheet closes before calling callback
+      Future.microtask(() {
         widget.onPaymentComplete();
-      }
-    });
+      });
+    }
   }
 
   @override
@@ -233,7 +234,10 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
                   onPressed: () {
                     if (mounted) {
                       Navigator.of(context).pop();
-                      widget.onPaymentComplete();
+                      // Use microtask to ensure the sheet closes before calling callback
+                      Future.microtask(() {
+                        widget.onPaymentComplete();
+                      });
                     }
                   },
                   child: const Text('Payment Done'),

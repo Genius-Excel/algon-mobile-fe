@@ -35,6 +35,12 @@ class HelperrRouter extends RootStackRouter {
         AutoRoute(page: ThirdOnboarding.page, path: '/onboarding/third'),
         AutoRoute(page: Login.page, path: '/login'),
         AutoRoute(page: SignUp.page, path: '/signup'),
+        AutoRoute(
+            page: ForgotPasswordStep1.page, path: '/forgot-password/step1'),
+        AutoRoute(
+            page: ForgotPasswordStep2.page, path: '/forgot-password/step2'),
+        AutoRoute(
+            page: ForgotPasswordStep3.page, path: '/forgot-password/step3'),
         AutoRoute(page: Home.page, path: '/home'),
         AutoRoute(page: Tracking.page, path: '/tracking'),
         AutoRoute(page: Alerts.page, path: '/alerts'),

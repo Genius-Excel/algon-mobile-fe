@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
@@ -58,7 +60,6 @@ class _DigitizationStep2ScreenState
       final formData = ref.read(digitizationFormProvider);
       final digitizationRepo = ref.read(digitizationRepositoryProvider);
 
-      // Prepare form data for API
       final apiFormData = <String, dynamic>{
         'nin': formData.nin!,
         'email': formData.email!,
@@ -86,8 +87,8 @@ class _DigitizationStep2ScreenState
       }
 
       // Create digitization application
-      final result =
-          await digitizationRepo.createDigitizationApplication(apiFormData, files);
+      final result = await digitizationRepo.createDigitizationApplication(
+          apiFormData, files);
 
       result.when(
         success: (response) {
@@ -97,9 +98,10 @@ class _DigitizationStep2ScreenState
             certificateFilePath: _selectedCertificateFilePath,
             ninSlipFilePath: _selectedNinSlipFilePath,
             profilePhotoFilePath: _selectedProfilePhotoFilePath,
-            certificateReferenceNumber: _referenceNumberController.text.trim().isNotEmpty
-                ? _referenceNumberController.text.trim()
-                : null,
+            certificateReferenceNumber:
+                _referenceNumberController.text.trim().isNotEmpty
+                    ? _referenceNumberController.text.trim()
+                    : null,
           );
 
           if (mounted) {
@@ -198,100 +200,130 @@ class _DigitizationStep2ScreenState
                                     style: BorderStyle.solid,
                                     width: 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.description,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Upload a clear photo or PDF scan of your certificate',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    GestureDetector(
-                                      onTap: () => _pickFile('certificate'),
-                                      child: Container(
-                                        width: 160,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.whiteColor,
-                                          borderRadius:
-                                              BorderRadius.circular(50),
-                                          border: Border.all(
-                                              color: AppColors.orange,
-                                              width: 0.1),
+                                child: _selectedCertificateFilePath != null &&
+                                        _isImageFile(
+                                            _selectedCertificateFilePath!)
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.file(
+                                          File(_selectedCertificateFilePath!),
+                                          width: double.infinity,
+                                          height: 300,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return _buildPlaceholder();
+                                          },
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 10),
-                                        child: const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.upload,
-                                                size: 20,
-                                                color: AppColors.blackColor),
-                                            SizedBox(width: 10),
-                                            Text('Choose File',
-                                                style: TextStyle(
-                                                    color: AppColors.blackColor,
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Supported formats: JPG, PNG, PDF (Max 5MB)',
-                                      style: TextStyle(
-                                        color: Colors.grey[500],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    if (_selectedCertificateFileName != null) ...[
-                                      const SizedBox(height: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE8F5E3),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.check_circle,
-                                              color: Color(0xFF065F46),
-                                              size: 20,
+                                      )
+                                    : Column(
+                                        children: [
+                                          Icon(
+                                            _selectedCertificateFilePath !=
+                                                        null &&
+                                                    _isPdfFile(
+                                                        _selectedCertificateFilePath!)
+                                                ? Icons.picture_as_pdf
+                                                : Icons.description,
+                                            size: 64,
+                                            color: Colors.grey[400],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Upload a clear photo or PDF scan of your certificate',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
                                             ),
-                                            const SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                _selectedCertificateFileName!,
-                                                style: const TextStyle(
-                                                  color: Color(0xFF065F46),
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 14,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          GestureDetector(
+                                            onTap: () =>
+                                                _pickFile('certificate'),
+                                            child: Container(
+                                              width: 160,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.whiteColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                border: Border.all(
+                                                    color: AppColors.orange,
+                                                    width: 0.1),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 10),
+                                              child: const Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.upload,
+                                                      size: 20,
+                                                      color:
+                                                          AppColors.blackColor),
+                                                  SizedBox(width: 10),
+                                                  Text('Choose File',
+                                                      style: TextStyle(
+                                                          color: AppColors
+                                                              .blackColor,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w500)),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Supported formats: JPG, PNG, PDF (Max 5MB)',
+                                            style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          if (_selectedCertificateFileName !=
+                                              null) ...[
+                                            const SizedBox(height: 16),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFE8F5E3),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.check_circle,
+                                                    color: Color(0xFF065F46),
+                                                    size: 20,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Flexible(
+                                                    child: Text(
+                                                      _selectedCertificateFileName!,
+                                                      style: const TextStyle(
+                                                        color:
+                                                            Color(0xFF065F46),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        fontSize: 14,
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ],
-                                ),
                               ),
                             ),
                           ],
@@ -300,7 +332,13 @@ class _DigitizationStep2ScreenState
                         CustomTextField(
                           controller: _referenceNumberController,
                           label: 'Certificate Reference Number (Optional)',
-                          hint: 'e.g., LG/2020/12345',
+                          hint: 'e.g LG/2020/12345',
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a certificate reference number';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 4),
                         const Text(
@@ -388,6 +426,48 @@ class _DigitizationStep2ScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  bool _isImageFile(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    return extension == 'jpg' ||
+        extension == 'jpeg' ||
+        extension == 'png' ||
+        extension == 'gif';
+  }
+
+  bool _isPdfFile(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    return extension == 'pdf';
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 300,
+      decoration: BoxDecoration(
+        color: AppColors.greyDark.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load image',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }

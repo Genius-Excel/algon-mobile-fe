@@ -123,8 +123,6 @@ class _NewApplicationStep1ScreenState
       },
       apiFailure: (error, statusCode) {
         if (mounted) {
-          // Still allow navigation even if verification fails
-          // The API might return an error but still allow proceeding
           Toast.info('NIN verification had issues, but proceeding...', context);
           context.router.pushNamed('/application/step2');
         }

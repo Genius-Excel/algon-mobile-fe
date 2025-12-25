@@ -73,20 +73,33 @@ class _NewApplicationStep3ScreenState
             // Save payment method to provider
             formData.paymentMethod = _selectedPaymentMethod;
 
+            // Store router reference before showing bottom sheet
+            final router = context.router;
+            final navigatorContext = context;
+
             // Show payment WebView in bottom sheet
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
-              builder: (context) => PaymentWebViewSheet(
+              builder: (bottomSheetContext) => PaymentWebViewSheet(
                 paymentUrl: response.data.data.authorizationUrl,
                 onPaymentComplete: () {
                   // Navigate to step 4 after payment completion
+                  // Use the stored router reference to avoid context issues
                   if (mounted) {
-                    Toast.success('Payment completed successfully!', context);
-                    Future.delayed(const Duration(milliseconds: 500), () {
+                    Toast.success(
+                        'Payment completed successfully!', navigatorContext);
+                    // Use Future.microtask to ensure navigation happens after the sheet closes
+                    Future.microtask(() {
                       if (mounted) {
-                        context.router.pushNamed('/application/step4');
+                        try {
+                          router.pushNamed('/application/step4');
+                        } catch (e) {
+                          // If step 4 doesn't exist or navigation fails, go to home
+                          print('⚠️ Could not navigate to step 4: $e');
+                          router.pushNamed('/home');
+                        }
                       }
                     });
                   }

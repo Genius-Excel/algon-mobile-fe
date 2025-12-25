@@ -26,8 +26,9 @@ class AuthService {
       return registerResult.when(
         success: (RegisterResponse response) async {
           if (response.data.isEmpty) {
-            return ApiFailure(
-              error: const ApiExceptions.errorResponse(error: 'Registration failed: No user data returned'),
+            return const ApiFailure(
+              error: ApiExceptions.errorResponse(
+                  error: 'Registration failed: No user data returned'),
               statusCode: -1,
             );
           }
@@ -48,7 +49,8 @@ class AuthService {
               // Step 3: Store tokens and user info
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('access_token', loginResponse.accessToken);
-              await prefs.setString('refresh_token', loginResponse.refreshToken);
+              await prefs.setString(
+                  'refresh_token', loginResponse.refreshToken);
               await prefs.setString('user_id', loginResponse.userId);
               await prefs.setString('user_role', loginResponse.role);
               await prefs.setBool('isLoggedIn', true);
@@ -78,7 +80,8 @@ class AuthService {
       );
     } catch (e) {
       return ApiFailure(
-        error: ApiExceptions.errorResponse(error: 'Unexpected error: ${e.toString()}'),
+        error: ApiExceptions.errorResponse(
+            error: 'Unexpected error: ${e.toString()}'),
         statusCode: -1,
       );
     }
@@ -119,7 +122,8 @@ class AuthService {
       );
     } catch (e) {
       return ApiFailure(
-        error: ApiExceptions.errorResponse(error: 'Unexpected error: ${e.toString()}'),
+        error: ApiExceptions.errorResponse(
+            error: 'Unexpected error: ${e.toString()}'),
         statusCode: -1,
       );
     }
@@ -131,7 +135,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
       final accessToken = prefs.getString('access_token');
-      
+
       // User is logged in if flag is true AND token exists
       return isLoggedIn && accessToken != null && accessToken.isNotEmpty;
     } catch (e) {
@@ -144,7 +148,7 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final roleString = prefs.getString('user_role');
-      
+
       if (roleString != null && roleString.isNotEmpty) {
         return UserRole.fromApiRole(roleString);
       }
@@ -168,8 +172,17 @@ class AuthService {
     }
   }
 
+  /// Logout and navigate to login screen
+  static Future<void> logoutAndNavigate(BuildContext context) async {
+    await logout();
+    if (context.mounted) {
+      context.router.replace(const Login());
+    }
+  }
+
   /// Navigate to appropriate screen based on user role
-  static void navigateToRoleScreen(UserRole role, BuildContext context, {bool replace = false}) {
+  static void navigateToRoleScreen(UserRole role, BuildContext context,
+      {bool replace = false}) {
     if (role == UserRole.superAdmin) {
       if (replace) {
         context.router.replaceNamed('/super-admin/dashboard');
@@ -197,14 +210,13 @@ class AuthService {
     }
   }
 
-  /// Check login status and navigate accordingly (for splash screen)
   static Future<void> checkLoginAndNavigate(BuildContext context) async {
     final loggedIn = await isLoggedIn();
-    
+
     if (loggedIn) {
       // User is logged in, get their role and navigate
       final userRole = await getStoredUserRole();
-      
+
       if (userRole != null && context.mounted) {
         // Use replace=true to prevent back navigation to splash/login
         navigateToRoleScreen(userRole, context, replace: true);
@@ -234,4 +246,3 @@ class AuthResult {
     required this.message,
   });
 }
-
