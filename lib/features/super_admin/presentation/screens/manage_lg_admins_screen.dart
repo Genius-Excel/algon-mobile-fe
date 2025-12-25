@@ -6,6 +6,7 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
@@ -110,7 +111,6 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
           }
         },
         apiFailure: (error, statusCode) {
-          // If 404, fallback to using states data to show all LGAs
           if (statusCode == 404) {
             _fetchLGAdminsFromStates();
             return;
@@ -121,7 +121,6 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
               _isLoading = false;
             });
             if (error is ApiExceptions) {
-              // Only show error if it's not a 404 (endpoint doesn't exist yet)
               if (statusCode != 404) {
                 Toast.apiError(error, context);
               }
@@ -141,10 +140,8 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
     }
   }
 
-  /// Fallback: Build LG Admin list from states data when endpoint doesn't exist
   void _fetchLGAdminsFromStates() {
     if (_states.isEmpty) {
-      // Wait for states to load first
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
           _fetchLGAdminsFromStates();
@@ -200,7 +197,6 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
       builder: (context) => _InviteLGAdminDialog(
         states: _states,
         onInvited: () {
-          // Refresh the list after inviting
           _fetchLGAdmins();
         },
       ),
@@ -272,7 +268,18 @@ class _ManageLGAdminsScreenState extends ConsumerState<ManageLGAdminsScreen> {
               child: Container(
                 color: const Color(0xFFF9FAFB),
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: List.generate(
+                          5,
+                          (index) => Padding(
+                            padding: EdgeInsets.only(
+                              bottom: index < 4 ? 12 : 0,
+                            ),
+                            child: const ShimmerLGAdminCard(),
+                          ),
+                        ),
+                      )
                     : _lgAdmins.isEmpty
                         ? Center(
                             child: Column(

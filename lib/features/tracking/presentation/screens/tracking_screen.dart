@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/core/enums/application_status.dart';
+import 'package:algon_mobile/core/enums/payment_status.dart';
 import 'package:algon_mobile/shared/widgets/bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
@@ -287,6 +288,10 @@ class _TrackingCard extends StatelessWidget {
     return ApplicationStatus.fromString(application.applicationStatus);
   }
 
+  PaymentStatus get _paymentStatus {
+    return PaymentStatus.fromString(application.paymentStatus);
+  }
+
   String get _location {
     return '${application.localGovernment.name}, ${application.state.name}';
   }
@@ -303,7 +308,7 @@ class _TrackingCard extends StatelessWidget {
         return 'Under review by local government admin.';
       case ApplicationStatus.pending:
       default:
-        if (application.paymentStatus == 'unpaid') {
+        if (_paymentStatus == PaymentStatus.pending) {
           return 'Payment pending. Please complete payment to proceed.';
         }
         return 'Application submitted and pending review.';
@@ -358,24 +363,33 @@ class _TrackingCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (application.paymentStatus == 'paid')
+              if (_paymentStatus == PaymentStatus.successful)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: _paymentStatus.backgroundColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'Paid',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green.shade700,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_paymentStatus.icon,
+                          size: 12, color: _paymentStatus.color),
+                      const SizedBox(width: 4),
+                      Text(
+                        _paymentStatus.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _paymentStatus.color,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              if (application.paymentStatus == 'paid') const SizedBox(width: 8),
+              if (_paymentStatus == PaymentStatus.successful)
+                const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
