@@ -120,7 +120,7 @@ class ProfileScreen extends ConsumerWidget {
                                   ),
                           ),
                           const SizedBox(height: 16),
-                          // Name
+
                           Text(
                             profile.fullName,
                             style: const TextStyle(
@@ -169,11 +169,11 @@ class ProfileScreen extends ConsumerWidget {
                                   label: 'Username',
                                   value: profile.username,
                                 ),
-                                const Divider(height: 24),
-                                _InfoRow(
-                                  label: 'Account Status',
-                                  value: profile.accountStatus.toUpperCase(),
-                                ),
+                                // const Divider(height: 24),
+                                // _InfoRow(
+                                //   label: 'Account Status',
+                                //   value: profile.accountStatus.toUpperCase(),
+                                // ),
                               ],
                             ),
                           ),

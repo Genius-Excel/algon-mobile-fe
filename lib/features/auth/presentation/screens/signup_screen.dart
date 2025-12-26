@@ -4,7 +4,6 @@ import 'package:algon_mobile/features/auth/data/models/register_models.dart';
 import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
 import 'package:algon_mobile/features/auth/data/services/auth_service_provider.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
-import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -28,15 +27,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  UserRole? _selectedRole;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
-
-  final List<UserRole> _availableRoles = [
-    UserRole.applicant,
-    UserRole.superAdmin,
-  ];
 
   @override
   void dispose() {
@@ -50,11 +43,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   Future<void> _handleSignUp() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
-
-    if (_selectedRole == null) {
-      Toast.error('Please select a role', context);
       return;
     }
 
@@ -78,7 +66,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             : null,
       );
 
-      final apiRole = _selectedRole!.toApiRole();
+      final apiRole = UserRole.applicant.toApiRole();
       final result = await authService.registerAndLogin(
         request: request,
         role: apiRole,
@@ -196,32 +184,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     key: _formKey,
                     child: ListView(
                       children: [
-                        CustomDropdownField<UserRole>(
-                          label: 'Sign up as',
-                          value: _selectedRole ?? _availableRoles.first,
-                          items: _availableRoles,
-                          itemBuilder: (role) => role.label,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedRole = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
                         CustomTextField(
                           controller: _ninController,
                           label: 'National Identity Number (NIN)',
                           hint: 'Enter your NIN',
                           keyboardType: TextInputType.number,
                           validator: (value) {
-                            // NIN is optional for super-admin, required for applicant
-                            if (_selectedRole == UserRole.applicant &&
-                                (value == null || value.isEmpty)) {
-                              return 'NIN is required for applicants';
+                            if (value == null || value.isEmpty) {
+                              return 'NIN is required';
                             }
-                            if (value != null &&
-                                value.isNotEmpty &&
-                                value.length != 11) {
+                            if (value.length != 11) {
                               return 'NIN must be 11 digits';
                             }
                             return null;

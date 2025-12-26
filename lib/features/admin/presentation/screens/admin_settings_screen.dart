@@ -60,89 +60,75 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _SettingsItem(
-                              title: 'System Configuration',
-                              subtitle: 'Configure global settings',
-                              icon: Icons.settings,
-                              onTap: () => context.router
-                                  .pushNamed('/super-admin/system-settings'),
-                            ),
-                            const Divider(),
-                            _SettingsItem(
-                              title: 'Audit Logs',
-                              subtitle: 'View system activity',
-                              icon: Icons.description,
-                              onTap: () => context.router
-                                  .pushNamed('/super-admin/audit-log'),
-                            ),
-                            const Divider(),
-                            _SettingsItem(
-                              title: 'Backup & Security',
-                              subtitle: 'Manage system backups',
-                              icon: Icons.backup,
-                              onTap: () {},
-                            ),
-                            const Divider(),
-                            _SettingsItem(
-                              title: 'Logout',
-                              subtitle: 'Sign out of admin panel',
-                              icon: Icons.logout,
-                              textColor: const Color(0xFFEF4444),
-                              onTap: () async {
-                                // Show confirmation dialog
-                                final shouldLogout = await showDialog<bool>(
-                                  context: context,
-                                  builder: (BuildContext dialogContext) {
-                                    return AlertDialog(
-                                      title: const Text('Logout'),
-                                      content: const Text(
-                                        'Are you sure you want to logout?',
+                      Column(
+                        children: [
+                          _SettingsItem(
+                            title: 'System Configuration',
+                            subtitle: 'Configure global settings',
+                            icon: Icons.settings,
+                            onTap: () => context.router
+                                .pushNamed('/super-admin/system-settings'),
+                          ),
+                          // const Divider(),
+                          // _SettingsItem(
+                          //   title: 'Audit Logs',
+                          //   subtitle: 'View system activity',
+                          //   icon: Icons.description,
+                          //   onTap: () => context.router
+                          //       .pushNamed('/super-admin/audit-log'),
+                          // ),
+                          const Divider(),
+                          _SettingsItem(
+                            title: 'Backup & Security',
+                            subtitle: 'Manage system backups',
+                            icon: Icons.backup,
+                            onTap: () {},
+                          ),
+                          const Divider(),
+                          _SettingsItem(
+                            title: 'Logout',
+                            subtitle: 'Sign out of admin panel',
+                            icon: Icons.logout,
+                            textColor: const Color(0xFFEF4444),
+                            onTap: () async {
+                              // Show confirmation dialog
+                              final shouldLogout = await showDialog<bool>(
+                                context: context,
+                                builder: (BuildContext dialogContext) {
+                                  return AlertDialog(
+                                    title: const Text('Logout'),
+                                    content: const Text(
+                                      'Are you sure you want to logout?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(dialogContext)
+                                              .pop(false);
+                                        },
+                                        child: const Text('Cancel'),
                                       ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(dialogContext)
-                                                .pop(false);
-                                          },
-                                          child: const Text('Cancel'),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(dialogContext)
+                                              .pop(true);
+                                        },
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.red,
                                         ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(dialogContext)
-                                                .pop(true);
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                          ),
-                                          child: const Text('Logout'),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-
-                                if (shouldLogout == true && context.mounted) {
-                                  await AuthService.logoutAndNavigate(context);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
+                                        child: const Text('Logout'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                      
+                              if (shouldLogout == true && context.mounted) {
+                                await AuthService.logoutAndNavigate(context);
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
