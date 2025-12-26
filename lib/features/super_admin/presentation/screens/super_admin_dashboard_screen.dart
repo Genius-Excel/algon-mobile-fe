@@ -521,7 +521,7 @@ class _MetricCard extends StatelessWidget {
                 child: Text(
                   label,
                   style: AppStyles.textStyle.copyWith(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: AppColors.greyDark,
                   ),
                 ),
