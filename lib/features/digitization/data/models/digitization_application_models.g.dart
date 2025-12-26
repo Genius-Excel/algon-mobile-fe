@@ -77,7 +77,7 @@ DigitizationFeeData _$DigitizationFeeDataFromJson(Map<String, dynamic> json) =>
       applicationFee: json['application_fee'] as num?,
       digitizationFee: json['digitization_fee'] as num?,
       regenerationFee: json['regeneration_fee'] as num?,
-      currency: json['currency'] as String,
+      currency: json['currency'] as String? ?? '',
       localGovernment: json['local_government'] as String?,
       lastUpdatedBy: json['last_updated_by'] as String?,
     );
@@ -96,15 +96,14 @@ Map<String, dynamic> _$DigitizationFeeDataToJson(
 DigitizationApplicationData _$DigitizationApplicationDataFromJson(
         Map<String, dynamic> json) =>
     DigitizationApplicationData(
-      userData: DigitizationUserData.fromJson(
-          json['user_data'] as Map<String, dynamic>),
+      userData: DigitizationApplicationData._userDataFromJson(json['data']),
       fee: DigitizationFeeData.fromJson(json['fee'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$DigitizationApplicationDataToJson(
         DigitizationApplicationData instance) =>
     <String, dynamic>{
-      'user_data': instance.userData,
+      'data': DigitizationApplicationData._userDataToJson(instance.userData),
       'fee': instance.fee,
     };
 

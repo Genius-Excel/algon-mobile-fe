@@ -29,10 +29,6 @@ class _DigitizationStep2ScreenState
   final _referenceNumberController = TextEditingController();
   String? _selectedCertificateFileName;
   String? _selectedCertificateFilePath;
-  String? _selectedNinSlipFileName;
-  String? _selectedNinSlipFilePath;
-  String? _selectedProfilePhotoFileName;
-  String? _selectedProfilePhotoFilePath;
   bool _isLoading = false;
 
   @override
@@ -47,8 +43,19 @@ class _DigitizationStep2ScreenState
       return;
     }
 
+    final formData = ref.read(digitizationFormProvider);
+
+    // Validate all required files are present
     if (_selectedCertificateFilePath == null) {
       Toast.error('Please upload your certificate', context);
+      return;
+    }
+    if (formData.ninSlipFilePath == null) {
+      Toast.error('NIN slip is required. Please go back to step 1.', context);
+      return;
+    }
+    if (formData.profilePhotoFilePath == null) {
+      Toast.error('Profile photo is required. Please go back to step 1.', context);
       return;
     }
 
@@ -57,7 +64,6 @@ class _DigitizationStep2ScreenState
     });
 
     try {
-      final formData = ref.read(digitizationFormProvider);
       final digitizationRepo = ref.read(digitizationRepositoryProvider);
 
       final apiFormData = <String, dynamic>{
@@ -74,16 +80,20 @@ class _DigitizationStep2ScreenState
             _referenceNumberController.text.trim();
       }
 
-      // Prepare files
+      // Prepare files - all required files from step 1 and step 2
       final files = <MapEntry<String, String>>[];
+      
+      // Certificate from step 2
       if (_selectedCertificateFilePath != null) {
-        files.add(MapEntry('uploaded_files', _selectedCertificateFilePath!));
+        files.add(MapEntry('uploaded_certificate', _selectedCertificateFilePath!));
       }
-      if (_selectedNinSlipFilePath != null) {
-        files.add(MapEntry('nin_slip', _selectedNinSlipFilePath!));
+      
+      // NIN slip and profile photo from step 1 (stored in provider)
+      if (formData.ninSlipFilePath != null) {
+        files.add(MapEntry('nin_slip', formData.ninSlipFilePath!));
       }
-      if (_selectedProfilePhotoFilePath != null) {
-        files.add(MapEntry('profile_photo', _selectedProfilePhotoFilePath!));
+      if (formData.profilePhotoFilePath != null) {
+        files.add(MapEntry('profile_photo', formData.profilePhotoFilePath!));
       }
 
       // Create digitization application
@@ -96,8 +106,6 @@ class _DigitizationStep2ScreenState
           formData.setApplicationId(response.data.userData.id);
           formData.setStep2Data(
             certificateFilePath: _selectedCertificateFilePath,
-            ninSlipFilePath: _selectedNinSlipFilePath,
-            profilePhotoFilePath: _selectedProfilePhotoFilePath,
             certificateReferenceNumber:
                 _referenceNumberController.text.trim().isNotEmpty
                     ? _referenceNumberController.text.trim()
@@ -333,12 +341,6 @@ class _DigitizationStep2ScreenState
                           controller: _referenceNumberController,
                           label: 'Certificate Reference Number (Optional)',
                           hint: 'e.g LG/2020/12345',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a certificate reference number';
-                            }
-                            return null;
-                          },
                         ),
                         const SizedBox(height: 4),
                         const Text(
@@ -478,18 +480,31 @@ class _DigitizationStep2ScreenState
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
     if (result != null && result.files.single.path != null) {
-      setState(() {
-        if (type == 'certificate') {
-          _selectedCertificateFileName = result.files.single.name;
-          _selectedCertificateFilePath = result.files.single.path!;
-        } else if (type == 'nin') {
-          _selectedNinSlipFileName = result.files.single.name;
-          _selectedNinSlipFilePath = result.files.single.path!;
-        } else if (type == 'profile') {
-          _selectedProfilePhotoFileName = result.files.single.name;
-          _selectedProfilePhotoFilePath = result.files.single.path!;
+      final filePath = result.files.single.path!;
+      final file = File(filePath);
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        final fileSizeInMB = fileSize / (1024 * 1024);
+        const maxSizeMB = 10.0;
+
+        if (fileSizeInMB > maxSizeMB) {
+          if (mounted) {
+            Toast.error(
+              'File is too large (${fileSizeInMB.toStringAsFixed(2)}MB). Maximum size is ${maxSizeMB}MB. Please compress or use a smaller file.',
+              context,
+              duration: 8,
+            );
+          }
+          return;
         }
-      });
+
+        setState(() {
+          if (type == 'certificate') {
+            _selectedCertificateFileName = result.files.single.name;
+            _selectedCertificateFilePath = filePath;
+          }
+        });
+      }
     }
   }
 }

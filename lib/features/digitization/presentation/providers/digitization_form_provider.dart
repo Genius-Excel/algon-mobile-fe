@@ -9,11 +9,11 @@ class DigitizationFormData extends ChangeNotifier {
   String? stateValue;
   String? localGovernment;
   String? fullName;
+  String? ninSlipFilePath;
+  String? profilePhotoFilePath;
 
   // Step 2 data
   String? certificateFilePath;
-  String? ninSlipFilePath;
-  String? profilePhotoFilePath;
   String? certificateReferenceNumber;
 
   // Step 3 data
@@ -29,6 +29,8 @@ class DigitizationFormData extends ChangeNotifier {
     required String stateValue,
     required String localGovernment,
     String? fullName,
+    String? ninSlipFilePath,
+    String? profilePhotoFilePath,
   }) {
     this.nin = nin;
     this.email = email;
@@ -36,18 +38,16 @@ class DigitizationFormData extends ChangeNotifier {
     this.stateValue = stateValue;
     this.localGovernment = localGovernment;
     if (fullName != null) this.fullName = fullName;
+    if (ninSlipFilePath != null) this.ninSlipFilePath = ninSlipFilePath;
+    if (profilePhotoFilePath != null) this.profilePhotoFilePath = profilePhotoFilePath;
     notifyListeners();
   }
 
   void setStep2Data({
     String? certificateFilePath,
-    String? ninSlipFilePath,
-    String? profilePhotoFilePath,
     String? certificateReferenceNumber,
   }) {
     if (certificateFilePath != null) this.certificateFilePath = certificateFilePath;
-    if (ninSlipFilePath != null) this.ninSlipFilePath = ninSlipFilePath;
-    if (profilePhotoFilePath != null) this.profilePhotoFilePath = profilePhotoFilePath;
     if (certificateReferenceNumber != null) this.certificateReferenceNumber = certificateReferenceNumber;
     notifyListeners();
   }
@@ -64,9 +64,9 @@ class DigitizationFormData extends ChangeNotifier {
     stateValue = null;
     localGovernment = null;
     fullName = null;
-    certificateFilePath = null;
     ninSlipFilePath = null;
     profilePhotoFilePath = null;
+    certificateFilePath = null;
     certificateReferenceNumber = null;
     paymentMethod = null;
     applicationId = null;

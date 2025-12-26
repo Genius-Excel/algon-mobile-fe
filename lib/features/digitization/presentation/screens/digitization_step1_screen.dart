@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_dropdown_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/step_header.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
+import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/features/digitization/presentation/providers/digitization_form_provider.dart';
 import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
 import 'package:algon_mobile/features/application/data/models/states_models.dart';
@@ -33,6 +36,11 @@ class _DigitizationStep1ScreenState
 
   List<StateData> _states = [];
   bool _isLoadingStates = false;
+
+  String? _selectedNinSlipFileName;
+  String? _selectedNinSlipFilePath;
+  String? _selectedProfilePhotoFileName;
+  String? _selectedProfilePhotoFilePath;
 
   @override
   void initState() {
@@ -259,6 +267,30 @@ class _DigitizationStep1ScreenState
                                   });
                                 },
                               ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Required Documents',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1F2937),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildFileUploader(
+                                label: 'NIN Slip (Required)',
+                                fileName: _selectedNinSlipFileName,
+                                filePath: _selectedNinSlipFilePath,
+                                onTap: () => _pickFile('nin'),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildFileUploader(
+                                label: 'Profile Photo (Required)',
+                                fileName: _selectedProfilePhotoFileName,
+                                filePath: _selectedProfilePhotoFilePath,
+                                onTap: () => _pickFile('profile'),
+                                isImage: true,
+                              ),
                             ],
                           ),
                         ),
@@ -271,6 +303,14 @@ class _DigitizationStep1ScreenState
                 text: 'Next',
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
+                    if (_selectedNinSlipFilePath == null) {
+                      Toast.error('Please upload your NIN slip', context);
+                      return;
+                    }
+                    if (_selectedProfilePhotoFilePath == null) {
+                      Toast.error('Please upload your profile photo', context);
+                      return;
+                    }
                     // Save Step 1 data to provider
                     final formData = ref.read(digitizationFormProvider);
                     formData.setStep1Data(
@@ -280,6 +320,8 @@ class _DigitizationStep1ScreenState
                       stateValue: _selectedState!.name,
                       localGovernment: _selectedLG!.name,
                       fullName: _fullNameController.text.trim(),
+                      ninSlipFilePath: _selectedNinSlipFilePath,
+                      profilePhotoFilePath: _selectedProfilePhotoFilePath,
                     );
                     context.router.pushNamed('/digitization/step2');
                   }
@@ -291,5 +333,148 @@ class _DigitizationStep1ScreenState
         ),
       ),
     );
+  }
+
+  Widget _buildFileUploader({
+    required String label,
+    String? fileName,
+    String? filePath,
+    required VoidCallback onTap,
+    bool isImage = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: fileName != null ? AppColors.green : Colors.grey[300]!,
+                style: BorderStyle.solid,
+                width: fileName != null ? 1.5 : 0.5,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color:
+                  fileName != null ? AppColors.green.withOpacity(0.05) : null,
+            ),
+            child: filePath != null && isImage && _isImageFile(filePath)
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(filePath),
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildFileUploadContent(fileName, onTap);
+                      },
+                    ),
+                  )
+                : _buildFileUploadContent(fileName, onTap),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFileUploadContent(String? fileName, VoidCallback onTap) {
+    return Row(
+      children: [
+        Icon(
+          fileName != null ? Icons.check_circle : Icons.upload,
+          size: 24,
+          color: fileName != null ? AppColors.green : Colors.grey[400],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                fileName != null ? 'File selected' : 'Tap to upload',
+                style: TextStyle(
+                  color: fileName != null ? AppColors.green : Colors.grey[600],
+                  fontSize: 14,
+                  fontWeight:
+                      fileName != null ? FontWeight.w500 : FontWeight.normal,
+                ),
+              ),
+              if (fileName != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  fileName,
+                  style: const TextStyle(
+                    color: AppColors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _isImageFile(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    return extension == 'jpg' ||
+        extension == 'jpeg' ||
+        extension == 'png' ||
+        extension == 'gif';
+  }
+
+  Future<void> _pickFile(String type) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: type == 'profile'
+          ? ['jpg', 'jpeg', 'png']
+          : ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+    if (result != null && result.files.single.path != null) {
+      final filePath = result.files.single.path!;
+      final file = File(filePath);
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        final fileSizeInMB = fileSize / (1024 * 1024);
+        const maxSizeMB = 10.0;
+
+        if (fileSizeInMB > maxSizeMB) {
+          if (mounted) {
+            Toast.error(
+              'File is too large (${fileSizeInMB.toStringAsFixed(2)}MB). Maximum size is ${maxSizeMB}MB. Please compress or use a smaller file.',
+              context,
+              duration: 8,
+            );
+          }
+          return;
+        }
+
+        setState(() {
+          if (type == 'nin') {
+            _selectedNinSlipFileName = result.files.single.name;
+            _selectedNinSlipFilePath = filePath;
+          } else if (type == 'profile') {
+            _selectedProfilePhotoFileName = result.files.single.name;
+            _selectedProfilePhotoFilePath = filePath;
+          }
+        });
+      }
+    }
   }
 }

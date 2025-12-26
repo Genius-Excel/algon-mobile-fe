@@ -102,7 +102,7 @@ class DigitizationFeeData {
     this.applicationFee,
     this.digitizationFee,
     this.regenerationFee,
-    required this.currency,
+    this.currency = '',
     this.localGovernment,
     this.lastUpdatedBy,
   });
@@ -115,7 +115,7 @@ class DigitizationFeeData {
 
 @JsonSerializable()
 class DigitizationApplicationData {
-  @JsonKey(name: 'user_data')
+  @JsonKey(name: 'data', fromJson: _userDataFromJson, toJson: _userDataToJson)
   final DigitizationUserData userData;
   final DigitizationFeeData fee;
 
@@ -128,6 +128,19 @@ class DigitizationApplicationData {
       _$DigitizationApplicationDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$DigitizationApplicationDataToJson(this);
+
+  static DigitizationUserData _userDataFromJson(dynamic json) {
+    if (json == null) {
+      throw ArgumentError('Expected user data but got null');
+    }
+    if (json is Map<String, dynamic>) {
+      return DigitizationUserData.fromJson(json);
+    }
+    throw ArgumentError('Expected Map<String, dynamic> but got ${json.runtimeType}');
+  }
+
+  static Map<String, dynamic> _userDataToJson(DigitizationUserData userData) =>
+      userData.toJson();
 }
 
 @JsonSerializable()
