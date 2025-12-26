@@ -21,6 +21,9 @@ class DigitizationFormData extends ChangeNotifier {
 
   // Application ID after creation
   String? applicationId;
+  
+  // Fee information
+  int? digitizationFee;
 
   void setStep1Data({
     required String nin,
@@ -57,6 +60,11 @@ class DigitizationFormData extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setDigitizationFee(int? fee) {
+    digitizationFee = fee;
+    notifyListeners();
+  }
+
   void reset() {
     nin = null;
     email = null;
@@ -70,6 +78,7 @@ class DigitizationFormData extends ChangeNotifier {
     certificateReferenceNumber = null;
     paymentMethod = null;
     applicationId = null;
+    digitizationFee = null;
     notifyListeners();
   }
 }

@@ -23,7 +23,6 @@ class _DigitizationStep3ScreenState
     extends ConsumerState<DigitizationStep3Screen> {
   String? _selectedPaymentMethod;
   bool _isLoading = false;
-  static const int _digitizationFee = 2000;
 
   Future<void> _initiatePayment() async {
     if (_selectedPaymentMethod == null) {
@@ -32,9 +31,11 @@ class _DigitizationStep3ScreenState
     }
 
     final formData = ref.read(digitizationFormProvider);
-    
+
     if (formData.applicationId == null) {
-      Toast.error('Application ID not found. Please go back and complete the previous steps.', context);
+      Toast.error(
+          'Application ID not found. Please go back and complete the previous steps.',
+          context);
       return;
     }
 
@@ -44,12 +45,23 @@ class _DigitizationStep3ScreenState
 
     try {
       final paymentRepo = ref.read(paymentRepositoryProvider);
-      
+
+      // Get digitization fee from form data
+      final digitizationFee = formData.digitizationFee;
+      if (digitizationFee == null || digitizationFee <= 0) {
+        Toast.error(
+          'Fee information not available. Please go back and try again.',
+          context,
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
       // Initiate payment
       final result = await paymentRepo.initiatePayment(
         formData.applicationId!,
         'digitization',
-        amount: _digitizationFee,
+        amount: digitizationFee,
       );
 
       result.when(
@@ -57,7 +69,7 @@ class _DigitizationStep3ScreenState
           if (mounted) {
             // Save payment method to provider
             formData.paymentMethod = _selectedPaymentMethod;
-            
+
             // Show payment WebView in bottom sheet
             showModalBottomSheet(
               context: context,
@@ -103,7 +115,6 @@ class _DigitizationStep3ScreenState
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,54 +144,61 @@ class _DigitizationStep3ScreenState
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.greenLight.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final formData = ref.watch(digitizationFormProvider);
+                          final digitizationFee = formData.digitizationFee ?? 0;
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 20),
+                            decoration: BoxDecoration(
                               color: AppColors.greenLight.withOpacity(0.1),
-                              width: 1),
-                        ),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Digitization Fee',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF6B7280),
-                              ),
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(
+                                  color: AppColors.greenLight.withOpacity(0.1),
+                                  width: 1),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '₦${_digitizationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF065F46),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD1FAE5),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                '60% less than standard application fee',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF065F46),
-                                  fontWeight: FontWeight.w500,
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Digitization Fee',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color(0xFF6B7280),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '₦${digitizationFee.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF065F46),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD1FAE5),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    '60% less than standard application fee',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF065F46),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
                       Container(
@@ -268,7 +286,8 @@ class _DigitizationStep3ScreenState
                     child: CustomButton(
                       text: 'Back',
                       variant: ButtonVariant.outline,
-                      onPressed: _isLoading ? null : () => context.router.maybePop(),
+                      onPressed:
+                          _isLoading ? null : () => context.router.maybePop(),
                     ),
                   ),
                   const SizedBox(width: 7),

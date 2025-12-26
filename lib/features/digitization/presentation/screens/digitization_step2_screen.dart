@@ -37,6 +37,38 @@ class _DigitizationStep2ScreenState
     super.dispose();
   }
 
+  Future<void> _verifyNinAndNavigate(String applicationId) async {
+    final digitizationRepo = ref.read(digitizationRepositoryProvider);
+
+    final verifyResult = await digitizationRepo.verifyNin(
+      applicationId,
+      'digitization',
+    );
+
+    verifyResult.when(
+      success: (_) {
+        if (mounted) {
+          Toast.success('Application created successfully!', context);
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              context.router.pushNamed('/digitization/step3');
+            }
+          });
+        }
+      },
+      apiFailure: (error, statusCode) {
+        if (mounted) {
+          Toast.info('NIN verification had issues, but proceeding...', context);
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              context.router.pushNamed('/digitization/step3');
+            }
+          });
+        }
+      },
+    );
+  }
+
   Future<void> _submitDigitization() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       Toast.formError(context);
@@ -102,8 +134,11 @@ class _DigitizationStep2ScreenState
 
       result.when(
         success: (response) {
-          // Save application ID and Step 2 data
+          // Save application ID, fee, and Step 2 data
           formData.setApplicationId(response.data.userData.id);
+          formData.setDigitizationFee(
+            response.data.fee.digitizationFee?.toInt(),
+          );
           formData.setStep2Data(
             certificateFilePath: _selectedCertificateFilePath,
             certificateReferenceNumber:
@@ -112,14 +147,8 @@ class _DigitizationStep2ScreenState
                     : null,
           );
 
-          if (mounted) {
-            Toast.success(response.message, context);
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                context.router.pushNamed('/digitization/step3');
-              }
-            });
-          }
+          // Verify NIN
+          _verifyNinAndNavigate(response.data.userData.id);
         },
         apiFailure: (error, statusCode) {
           if (mounted) {

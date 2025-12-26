@@ -80,6 +80,43 @@ class DigitizationRepositoryImpl implements DigitizationRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<ApiResult<void>> verifyNin(String id, String type) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      print('🚀 Verify NIN API Call (Digitization):');
+      print('   Endpoint: ${ApiEndpoints.verifyNin(id)}');
+      print('   Type: $type');
+
+      final response = await apiClient.get(
+        ApiEndpoints.verifyNin(id),
+        queryParameters: {'type': type},
+      );
+
+      print('✅ Verify NIN Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return const Success(data: null);
+    } on DioException catch (e) {
+      print('❌ Verify NIN Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Verify NIN Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
 }
 
 final digitizationRepositoryImplProvider =

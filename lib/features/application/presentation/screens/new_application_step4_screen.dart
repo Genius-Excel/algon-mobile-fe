@@ -15,7 +15,9 @@ class NewApplicationStep4Screen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formData = ref.watch(applicationFormProvider);
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent going back
+      child: Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,6 +136,7 @@ class NewApplicationStep4Screen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

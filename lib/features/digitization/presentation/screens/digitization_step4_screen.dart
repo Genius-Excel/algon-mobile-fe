@@ -16,7 +16,9 @@ class DigitizationStep4Screen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formData = ref.watch(digitizationFormProvider);
     
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent going back
+      child: Scaffold(
       body: SafeArea(
         child: Column(
           children: [
@@ -192,10 +194,8 @@ class DigitizationStep4Screen extends ConsumerWidget {
                   CustomButton(
                     text: 'Continue',
                     iconData: Icons.check,
-                    variant: ButtonVariant.outline,
                     onPressed: () {
                       // Navigate to tracking after digitization is complete
-                      final formData = ref.read(digitizationFormProvider);
                       formData.reset();
                       context.router.pushNamed('/tracking');
                     },
@@ -206,6 +206,7 @@ class DigitizationStep4Screen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

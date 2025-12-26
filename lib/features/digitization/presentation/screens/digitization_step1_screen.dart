@@ -14,6 +14,7 @@ import 'package:algon_mobile/features/digitization/presentation/providers/digiti
 import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
 import 'package:algon_mobile/features/application/data/models/states_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
+import 'package:algon_mobile/features/profile/presentation/providers/profile_provider.dart';
 
 @RoutePage(name: 'DigitizationStep1')
 class DigitizationStep1Screen extends ConsumerStatefulWidget {
@@ -46,6 +47,26 @@ class _DigitizationStep1ScreenState
   void initState() {
     super.initState();
     _fetchStates();
+    _prefillUserData();
+  }
+
+  void _prefillUserData() {
+    // Prefill email and NIN from user profile
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileAsync = ref.read(userProfileProvider);
+      profileAsync.whenData((profile) {
+        if (profile != null && mounted) {
+          final email = profile.data.email;
+          final nin = profile.data.nin;
+          if (email.isNotEmpty) {
+            _emailController.text = email;
+          }
+          if (nin != null && nin.isNotEmpty) {
+            _ninController.text = nin;
+          }
+        }
+      });
+    });
   }
 
   Future<void> _fetchStates() async {

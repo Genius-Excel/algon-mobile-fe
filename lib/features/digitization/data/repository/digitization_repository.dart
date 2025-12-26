@@ -10,6 +10,11 @@ abstract class DigitizationRepository {
     Map<String, dynamic> formData,
     List<MapEntry<String, String>> files,
   );
+  
+  Future<ApiResult<void>> verifyNin(
+    String id,
+    String type,
+  );
 }
 
 final digitizationRepositoryProvider = Provider<DigitizationRepository>((ref) {
