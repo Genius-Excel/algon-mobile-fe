@@ -12,7 +12,7 @@ class QuickActions extends StatelessWidget {
       children: [
         _ActionCard(
           icon: Icons.search,
-          text: 'Track Status',
+          text: 'Tracking',
           onTap: () => context.router.push(const Tracking()),
         ),
         _ActionCard(

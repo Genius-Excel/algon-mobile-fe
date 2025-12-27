@@ -86,12 +86,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             } else {
               Toast.error(error.toString(), context);
             }
-            // Navigate to login on failure
-            Future.delayed(const Duration(seconds: 1), () {
-              if (mounted) {
-                context.router.pushNamed('/login');
-              }
-            });
+            // Stay on signup screen to allow user to correct errors
           }
         },
       );
