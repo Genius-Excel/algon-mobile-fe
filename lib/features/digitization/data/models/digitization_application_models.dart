@@ -86,11 +86,11 @@ class DigitizationUserData {
 
 @JsonSerializable()
 class DigitizationFeeData {
-  @JsonKey(name: 'application_fee')
+  @JsonKey(name: 'application_fee', fromJson: _feeFromJson, toJson: _feeToJson)
   final num? applicationFee;
-  @JsonKey(name: 'digitization_fee')
+  @JsonKey(name: 'digitization_fee', fromJson: _feeFromJson, toJson: _feeToJson)
   final num? digitizationFee;
-  @JsonKey(name: 'regeneration_fee')
+  @JsonKey(name: 'regeneration_fee', fromJson: _feeFromJson, toJson: _feeToJson)
   final num? regenerationFee;
   final String currency;
   @JsonKey(name: 'local_government')
@@ -111,6 +111,17 @@ class DigitizationFeeData {
       _$DigitizationFeeDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$DigitizationFeeDataToJson(this);
+
+  static num? _feeFromJson(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    if (value is String) {
+      return num.tryParse(value);
+    }
+    return null;
+  }
+
+  static dynamic _feeToJson(num? value) => value;
 }
 
 @JsonSerializable()
@@ -136,7 +147,8 @@ class DigitizationApplicationData {
     if (json is Map<String, dynamic>) {
       return DigitizationUserData.fromJson(json);
     }
-    throw ArgumentError('Expected Map<String, dynamic> but got ${json.runtimeType}');
+    throw ArgumentError(
+        'Expected Map<String, dynamic> but got ${json.runtimeType}');
   }
 
   static Map<String, dynamic> _userDataToJson(DigitizationUserData userData) =>
@@ -159,4 +171,3 @@ class DigitizationApplicationResponse {
   Map<String, dynamic> toJson() =>
       _$DigitizationApplicationResponseToJson(this);
 }
-

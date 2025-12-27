@@ -74,9 +74,11 @@ Map<String, dynamic> _$DigitizationUserDataToJson(
 
 DigitizationFeeData _$DigitizationFeeDataFromJson(Map<String, dynamic> json) =>
     DigitizationFeeData(
-      applicationFee: json['application_fee'] as num?,
-      digitizationFee: json['digitization_fee'] as num?,
-      regenerationFee: json['regeneration_fee'] as num?,
+      applicationFee: DigitizationFeeData._feeFromJson(json['application_fee']),
+      digitizationFee:
+          DigitizationFeeData._feeFromJson(json['digitization_fee']),
+      regenerationFee:
+          DigitizationFeeData._feeFromJson(json['regeneration_fee']),
       currency: json['currency'] as String? ?? '',
       localGovernment: json['local_government'] as String?,
       lastUpdatedBy: json['last_updated_by'] as String?,
@@ -85,9 +87,12 @@ DigitizationFeeData _$DigitizationFeeDataFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$DigitizationFeeDataToJson(
         DigitizationFeeData instance) =>
     <String, dynamic>{
-      'application_fee': instance.applicationFee,
-      'digitization_fee': instance.digitizationFee,
-      'regeneration_fee': instance.regenerationFee,
+      'application_fee':
+          DigitizationFeeData._feeToJson(instance.applicationFee),
+      'digitization_fee':
+          DigitizationFeeData._feeToJson(instance.digitizationFee),
+      'regeneration_fee':
+          DigitizationFeeData._feeToJson(instance.regenerationFee),
       'currency': instance.currency,
       'local_government': instance.localGovernment,
       'last_updated_by': instance.lastUpdatedBy,
