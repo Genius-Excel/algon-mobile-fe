@@ -15,6 +15,7 @@ import 'package:algon_mobile/features/application/data/models/states_models.dart
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
+import 'package:algon_mobile/features/profile/presentation/providers/profile_provider.dart';
 import 'package:file_picker/file_picker.dart';
 
 @RoutePage(name: 'NewApplicationStep1')
@@ -49,6 +50,31 @@ class _NewApplicationStep1ScreenState
   void initState() {
     super.initState();
     _fetchStates();
+    _prefillUserData();
+  }
+
+  void _prefillUserData() {
+    // Prefill NIN, email, and phone from user profile
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileAsync = ref.read(userProfileProvider);
+      profileAsync.whenData((profile) {
+        if (profile != null && mounted) {
+          final email = profile.data.email;
+          final nin = profile.data.nin;
+          final phoneNumber = profile.data.phoneNumber;
+
+          if (email.isNotEmpty) {
+            _emailController.text = email;
+          }
+          if (nin != null && nin.isNotEmpty) {
+            _ninController.text = nin;
+          }
+          if (phoneNumber != null && phoneNumber.isNotEmpty) {
+            _phoneController.text = phoneNumber;
+          }
+        }
+      });
+    });
   }
 
   Future<void> _fetchStates() async {
@@ -197,6 +223,7 @@ class _NewApplicationStep1ScreenState
                                 label: 'National Identity Number (NIN)',
                                 hint: 'Enter your NIN',
                                 keyboardType: TextInputType.number,
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'NIN is required';
@@ -306,6 +333,7 @@ class _NewApplicationStep1ScreenState
                                 label: 'Email Address',
                                 hint: 'your.email@example.com',
                                 keyboardType: TextInputType.emailAddress,
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Email is required';
@@ -322,6 +350,7 @@ class _NewApplicationStep1ScreenState
                                 controller: _phoneController,
                                 label: 'Phone Number',
                                 hint: '+234 800 000 0000',
+                                readOnly: true,
                                 keyboardType: TextInputType.phone,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {

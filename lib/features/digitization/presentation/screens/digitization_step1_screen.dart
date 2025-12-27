@@ -51,18 +51,23 @@ class _DigitizationStep1ScreenState
   }
 
   void _prefillUserData() {
-    // Prefill email and NIN from user profile
+    // Prefill NIN, email, and phone from user profile
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final profileAsync = ref.read(userProfileProvider);
       profileAsync.whenData((profile) {
         if (profile != null && mounted) {
           final email = profile.data.email;
           final nin = profile.data.nin;
+          final phoneNumber = profile.data.phoneNumber;
+
           if (email.isNotEmpty) {
             _emailController.text = email;
           }
           if (nin != null && nin.isNotEmpty) {
             _ninController.text = nin;
+          }
+          if (phoneNumber != null && phoneNumber.isNotEmpty) {
+            _phoneController.text = phoneNumber;
           }
         }
       });
@@ -188,6 +193,7 @@ class _DigitizationStep1ScreenState
                                 label: 'National Identity Number (NIN)',
                                 hint: 'Enter your NIN',
                                 keyboardType: TextInputType.number,
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'NIN is required';
@@ -216,6 +222,7 @@ class _DigitizationStep1ScreenState
                                 label: 'Email Address',
                                 hint: 'your.email@example.com',
                                 keyboardType: TextInputType.emailAddress,
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Email is required';
@@ -233,6 +240,7 @@ class _DigitizationStep1ScreenState
                                 label: 'Phone Number',
                                 hint: '+234 800 000 0000',
                                 keyboardType: TextInputType.phone,
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Phone number is required';
