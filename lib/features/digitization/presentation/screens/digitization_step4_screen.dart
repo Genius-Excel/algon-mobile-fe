@@ -123,7 +123,10 @@ class DigitizationStep4Screen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Ikeja LGA, Lagos State',
+                              formData.localGovernment != null &&
+                                      formData.stateValue != null
+                                  ? '${formData.localGovernment}, ${formData.stateValue}'
+                                  : 'N/A',
                               style: AppStyles.textStyle.copyWith(
                                 fontSize: 14,
                                 color: AppColors.greyDark.withOpacity(0.6),
@@ -151,7 +154,7 @@ class DigitizationStep4Screen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'John Doe',
+                                    formData.fullName ?? 'N/A',
                                     style: AppStyles.textStyle.copyWith(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -160,7 +163,11 @@ class DigitizationStep4Screen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Certificate ID: DIGI-2025-647',
+                                    formData.certificateReferenceNumber != null
+                                        ? 'Reference: ${formData.certificateReferenceNumber}'
+                                        : formData.applicationId != null
+                                            ? 'ID: ${formData.applicationId!.substring(0, 8).toUpperCase()}'
+                                            : 'Certificate ID: N/A',
                                     style: AppStyles.textStyle.copyWith(
                                       fontSize: 14,
                                       color: const Color(0xFF6B7280),

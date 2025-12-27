@@ -75,23 +75,21 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         success: (response) {
           if (mounted) {
             setState(() {
-              if (refresh) {
-                _applications = response.data.results;
-              } else {
-                _applications.addAll(response.data.results);
-              }
-              // Sort by date (latest first)
-              _applications.sort((a, b) {
+              final updatedList = refresh
+                  ? List<ApplicationItem>.from(response.data.results)
+                  : List<ApplicationItem>.from(_applications)
+                ..addAll(response.data.results);
+              updatedList.sort((a, b) {
                 try {
                   final dateA = DateTime.parse(a.createdAt);
                   final dateB = DateTime.parse(b.createdAt);
                   return dateB
                       .compareTo(dateA); // Descending order (newest first)
                 } catch (e) {
-                  // If parsing fails, maintain original order
                   return 0;
                 }
               });
+              _applications = updatedList;
               _nextUrl = response.data.next;
               _totalCount = response.data.count;
               _isLoading = false;
@@ -141,9 +139,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         success: (response) {
           if (mounted) {
             setState(() {
-              _applications.addAll(response.data.results);
+              // Create new list with existing items and new items
+              final updatedList = List<ApplicationItem>.from(_applications)
+                ..addAll(response.data.results);
               // Sort by date (latest first)
-              _applications.sort((a, b) {
+              updatedList.sort((a, b) {
                 try {
                   final dateA = DateTime.parse(a.createdAt);
                   final dateB = DateTime.parse(b.createdAt);
@@ -154,6 +154,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   return 0;
                 }
               });
+              // Assign new list instance to trigger rebuild
+              _applications = updatedList;
               _nextUrl = response.data.next;
               _isLoadingMore = false;
             });
