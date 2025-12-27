@@ -444,7 +444,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                ..._dashboardData!.data.recentApplications
+                                ...(List<RecentApplication>.from(
+                                        _dashboardData!.data.recentApplications)
+                                      ..sort((a, b) =>
+                                          DateTime.parse(b.createdAt).compareTo(
+                                              DateTime.parse(a.createdAt))))
+                                    .take(4)
                                     .map((app) => _RecentApplicationCard(
                                           application: app,
                                         )),

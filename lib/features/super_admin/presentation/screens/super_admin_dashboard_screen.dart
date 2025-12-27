@@ -10,6 +10,7 @@ import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/super_admin/data/repository/super_admin_repository.dart';
 import 'package:algon_mobile/features/super_admin/data/models/dashboard_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
+import '../../../../core/router/router.dart';
 
 @RoutePage(name: 'SuperAdminDashboard')
 class SuperAdminDashboardScreen extends ConsumerStatefulWidget {
@@ -420,8 +421,8 @@ class _SuperAdminDashboardScreenState
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: GestureDetector(
-                                        onTap: () => context.router.pushNamed(
-                                            '/super-admin/system-settings'),
+                                        onTap: () => context.router.push(
+                                            SystemSettings(isSuperAdmin: true)),
                                         child: Container(
                                           padding: const EdgeInsets.all(20),
                                           decoration: BoxDecoration(

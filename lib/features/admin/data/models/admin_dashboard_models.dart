@@ -112,7 +112,7 @@ class RecentApplication {
   final StateData state;
   @JsonKey(name: 'local_government')
   final LocalGovernmentData localGovernment;
-  @JsonKey(name: 'approved_by')
+  @JsonKey(name: 'approved_by', fromJson: _approvedByFromJson, toJson: _approvedByToJson)
   final String? approvedBy;
 
   const RecentApplication({
@@ -140,10 +140,29 @@ class RecentApplication {
     this.approvedBy,
   });
 
-  factory RecentApplication.fromJson(Map<String, dynamic> json) =>
-      _$RecentApplicationFromJson(json);
+  factory RecentApplication.fromJson(Map<String, dynamic> json) {
+    // Create a copy to avoid mutating the original
+    final jsonCopy = Map<String, dynamic>.from(json);
+    
+    // Remove application_type if present (not part of RecentApplication model)
+    jsonCopy.remove('application_type');
+    
+    return _$RecentApplicationFromJson(jsonCopy);
+  }
 
   Map<String, dynamic> toJson() => _$RecentApplicationToJson(this);
+  
+  static String? _approvedByFromJson(dynamic json) {
+    if (json == null) return null;
+    if (json is String) return json;
+    if (json is Map<String, dynamic>) {
+      // Convert object to string (use ID or email)
+      return json['id'] ?? json['email'];
+    }
+    return json.toString();
+  }
+  
+  static dynamic _approvedByToJson(String? approvedBy) => approvedBy;
 }
 
 @JsonSerializable()

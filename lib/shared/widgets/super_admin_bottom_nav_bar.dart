@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
+import '../../core/router/router.dart';
 
 class SuperAdminBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -65,7 +66,7 @@ class SuperAdminBottomNavBar extends StatelessWidget {
                 isActive: currentIndex == 3,
                 onTap: () {
                   if (currentIndex != 3) {
-                    context.router.pushNamed('/super-admin/system-settings');
+                    context.router.push(SystemSettings(isSuperAdmin: true));
                   }
                 },
               ),

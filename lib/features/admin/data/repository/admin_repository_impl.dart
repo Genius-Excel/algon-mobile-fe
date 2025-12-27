@@ -95,16 +95,35 @@ class AdminRepositoryImpl implements AdminRepository {
     try {
       final apiClient = ref.read(apiClientProvider);
 
+      // Check if fee already exists to determine if we should use POST or PATCH
+      final existingFeeResult = await getLgaFee();
+      final bool feeExists = existingFeeResult.when(
+        success: (response) => response.data.isNotEmpty,
+        apiFailure: (error, statusCode) => false,
+      );
+
+      final String method = feeExists ? 'PATCH' : 'POST';
       print('🚀 Create/Update LGA Fee API Call:');
+      print('   Method: $method');
       print('   Endpoint: ${ApiEndpoints.lgaFee}');
       print('   Application Fee: ${request.applicationFee}');
       print('   Digitization Fee: ${request.digitizationFee}');
       print('   Regeneration Fee: ${request.regenerationFee}');
 
-      final response = await apiClient.post(
-        ApiEndpoints.lgaFee,
-        data: request.toJson(),
-      );
+      final Response<dynamic> response;
+      if (feeExists) {
+        // Use PATCH for updates
+        response = await apiClient.patch(
+          ApiEndpoints.lgaFee,
+          data: request.toJson(),
+        );
+      } else {
+        // Use POST for creation
+        response = await apiClient.post(
+          ApiEndpoints.lgaFee,
+          data: request.toJson(),
+        );
+      }
 
       print('✅ Create/Update LGA Fee Response Status: ${response.statusCode}');
       print('   Response Data: ${response.data}');

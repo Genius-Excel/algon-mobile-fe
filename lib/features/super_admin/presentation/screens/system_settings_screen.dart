@@ -1,36 +1,181 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/custom_text_field.dart';
 import 'package:algon_mobile/shared/widgets/custom_button.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
+import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
+import 'package:algon_mobile/features/admin/data/repository/admin_repository.dart';
+import 'package:algon_mobile/features/admin/data/models/lga_fee_models.dart';
+import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 
 @RoutePage(name: 'SystemSettings')
-class SystemSettingsScreen extends StatefulWidget {
-  const SystemSettingsScreen({super.key});
+class SystemSettingsScreen extends ConsumerStatefulWidget {
+  final bool isSuperAdmin;
+
+  const SystemSettingsScreen({
+    super.key,
+    this.isSuperAdmin = false,
+  });
 
   @override
-  State<SystemSettingsScreen> createState() => _SystemSettingsScreenState();
+  ConsumerState<SystemSettingsScreen> createState() =>
+      _SystemSettingsScreenState();
 }
 
-class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
-  final _certificateTitleController = TextEditingController(text: 'Certificate of Indigeneship');
+class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
+  final _certificateTitleController =
+      TextEditingController(text: 'Certificate of Indigeneship');
   final _validityPeriodController = TextEditingController(text: '5');
-  final _applicationFeeController = TextEditingController(text: '5000');
+  final _applicationFeeController = TextEditingController();
+  final _digitizationFeeController = TextEditingController();
+  final _regenerationFeeController = TextEditingController();
 
   bool _onlinePaymentEnabled = true;
   bool _qrCodeVerificationEnabled = true;
   bool _publicVerificationPortalEnabled = true;
   bool _emailNotificationsEnabled = true;
   bool _smsNotificationsEnabled = true;
+  bool _isLoading = false;
+  bool _isLoadingFees = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLgaFees();
+  }
 
   @override
   void dispose() {
     _certificateTitleController.dispose();
     _validityPeriodController.dispose();
     _applicationFeeController.dispose();
+    _digitizationFeeController.dispose();
+    _regenerationFeeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadLgaFees() async {
+    try {
+      final adminRepo = ref.read(adminRepositoryProvider);
+      final result = await adminRepo.getLgaFee();
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _isLoadingFees = false;
+              // If there's existing fee data, populate the fields
+              if (response.data.isNotEmpty) {
+                final feeData = response.data.first;
+                _applicationFeeController.text = feeData.applicationFee;
+                _digitizationFeeController.text = feeData.digitizationFee;
+                _regenerationFeeController.text = feeData.regenerationFee;
+              } else {
+                // Set default values
+                _applicationFeeController.text = '0';
+                _digitizationFeeController.text = '0';
+                _regenerationFeeController.text = '0';
+              }
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingFees = false;
+              // Set default values on error
+              _applicationFeeController.text = '0';
+              _digitizationFeeController.text = '0';
+              _regenerationFeeController.text = '0';
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingFees = false;
+          _applicationFeeController.text = '0';
+          _digitizationFeeController.text = '0';
+          _regenerationFeeController.text = '0';
+        });
+      }
+    }
+  }
+
+  Future<void> _saveLgaFees() async {
+    // Validate input
+    final applicationFeeText = _applicationFeeController.text.trim();
+    final digitizationFeeText = _digitizationFeeController.text.trim();
+    final regenerationFeeText = _regenerationFeeController.text.trim();
+
+    if (applicationFeeText.isEmpty) {
+      Toast.error('Please enter an application fee', context);
+      return;
+    }
+
+    final applicationFee = double.tryParse(applicationFeeText);
+    final digitizationFee = double.tryParse(
+        digitizationFeeText.isEmpty ? '0' : digitizationFeeText);
+    final regenerationFee = double.tryParse(
+        regenerationFeeText.isEmpty ? '0' : regenerationFeeText);
+
+    if (applicationFee == null) {
+      Toast.error('Please enter a valid application fee', context);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final adminRepo = ref.read(adminRepositoryProvider);
+      final request = CreateLGAFeeRequest(
+        applicationFee: applicationFee,
+        digitizationFee: digitizationFee ?? 0.0,
+        regenerationFee: regenerationFee ?? 0.0,
+      );
+
+      final result = await adminRepo.createOrUpdateLgaFee(request);
+
+      result.when(
+        success: (feeData) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            Toast.success('Fee configuration saved successfully', context);
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        Toast.error('Failed to save fees: ${e.toString()}', context);
+      }
+    }
   }
 
   @override
@@ -90,23 +235,50 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                       _SettingsSection(
                         title: 'Payment Configuration',
                         children: [
-                          CustomTextField(
-                            controller: _applicationFeeController,
-                            label: 'Application Fee (₦)',
-                            hint: 'Enter application fee',
-                            keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: 16),
-                          _ToggleSetting(
-                            title: 'Enable Online Payment',
-                            description: 'Allow card and bank payments',
-                            value: _onlinePaymentEnabled,
-                            onChanged: (value) {
-                              setState(() {
-                                _onlinePaymentEnabled = value;
-                              });
-                            },
-                          ),
+                          if (_isLoadingFees)
+                            const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          else ...[
+                            CustomTextField(
+                              controller: _applicationFeeController,
+                              label: 'Application Fee (₦)',
+                              hint: 'Enter application fee',
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                            ),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              controller: _digitizationFeeController,
+                              label: 'Digitization Fee (₦)',
+                              hint: 'Enter digitization fee',
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                            ),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              controller: _regenerationFeeController,
+                              label: 'Regeneration Fee (₦)',
+                              hint: 'Enter regeneration fee',
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                            ),
+                            const SizedBox(height: 16),
+                            _ToggleSetting(
+                              title: 'Enable Online Payment',
+                              description: 'Allow card and bank payments',
+                              value: _onlinePaymentEnabled,
+                              onChanged: (value) {
+                                setState(() {
+                                  _onlinePaymentEnabled = value;
+                                });
+                              },
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -179,11 +351,13 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                                   ),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
                                       child: const Text('Cancel'),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
                                       style: TextButton.styleFrom(
                                         foregroundColor: Colors.red,
                                       ),
@@ -211,22 +385,18 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: CustomButton(
-                text: 'Save Changes',
-                onPressed: () {
-                  // TODO: Implement save logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Settings saved successfully'),
-                    ),
-                  );
-                },
+                text: _isLoading ? 'Saving...' : 'Save Changes',
+                onPressed: (_isLoading || _isLoadingFees) ? null : _saveLgaFees,
+                isLoading: _isLoading,
                 isFullWidth: true,
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: const SuperAdminBottomNavBar(currentIndex: 3),
+      bottomNavigationBar: widget.isSuperAdmin
+          ? const SuperAdminBottomNavBar(currentIndex: 3)
+          : const AdminBottomNavBar(currentIndex: 3),
     );
   }
 }
@@ -317,7 +487,7 @@ class _ToggleSetting extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.green,
+          activeThumbColor: AppColors.green,
         ),
       ],
     );
@@ -384,4 +554,3 @@ class _LogoutButton extends StatelessWidget {
     );
   }
 }
-

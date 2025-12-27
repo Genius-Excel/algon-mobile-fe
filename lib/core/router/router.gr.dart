@@ -631,10 +631,17 @@ class SuperAdminDashboard extends PageRouteInfo<void> {
 
 /// generated route for
 /// [SystemSettingsScreen]
-class SystemSettings extends PageRouteInfo<void> {
-  const SystemSettings({List<PageRouteInfo>? children})
-      : super(
+class SystemSettings extends PageRouteInfo<SystemSettingsArgs> {
+  SystemSettings({
+    Key? key,
+    bool isSuperAdmin = false,
+    List<PageRouteInfo>? children,
+  }) : super(
           SystemSettings.name,
+          args: SystemSettingsArgs(
+            key: key,
+            isSuperAdmin: isSuperAdmin,
+          ),
           initialChildren: children,
         );
 
@@ -643,9 +650,30 @@ class SystemSettings extends PageRouteInfo<void> {
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const SystemSettingsScreen();
+      final args = data.argsAs<SystemSettingsArgs>(
+          orElse: () => const SystemSettingsArgs());
+      return SystemSettingsScreen(
+        key: args.key,
+        isSuperAdmin: args.isSuperAdmin,
+      );
     },
   );
+}
+
+class SystemSettingsArgs {
+  const SystemSettingsArgs({
+    this.key,
+    this.isSuperAdmin = false,
+  });
+
+  final Key? key;
+
+  final bool isSuperAdmin;
+
+  @override
+  String toString() {
+    return 'SystemSettingsArgs{key: $key, isSuperAdmin: $isSuperAdmin}';
+  }
 }
 
 /// generated route for

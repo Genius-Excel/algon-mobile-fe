@@ -37,8 +37,24 @@ class UpdateApplicationStatusResponse {
   Map<String, dynamic> toJson() =>
       _$UpdateApplicationStatusResponseToJson(this);
 
-  static ApplicationItem _applicationItemFromJson(Map<String, dynamic> json) =>
-      ApplicationItem.fromJson(json);
+  static ApplicationItem _applicationItemFromJson(Map<String, dynamic> json) {
+    // Create a copy to avoid mutating the original
+    final jsonCopy = Map<String, dynamic>.from(json);
+    
+    // Handle approved_by field which can be an object {id, email} or a string
+    final approvedBy = jsonCopy['approved_by'];
+    if (approvedBy != null) {
+      if (approvedBy is Map<String, dynamic>) {
+        // Convert object to string (use ID or email)
+        jsonCopy['approved_by'] = approvedBy['id'] ?? approvedBy['email'];
+      }
+    }
+    
+    // Remove application_type if present (not part of ApplicationItem model)
+    jsonCopy.remove('application_type');
+    
+    return ApplicationItem.fromJson(jsonCopy);
+  }
 
   static Map<String, dynamic> _applicationItemToJson(ApplicationItem item) =>
       item.toJson();

@@ -54,7 +54,7 @@ ApplicationItem _$ApplicationItemFromJson(Map<String, dynamic> json) =>
       state: StateData.fromJson(json['state'] as Map<String, dynamic>),
       localGovernment: LocalGovernmentData.fromJson(
           json['local_government'] as Map<String, dynamic>),
-      approvedBy: json['approved_by'] as String?,
+      approvedBy: ApplicationItem._approvedByFromJson(json['approved_by']),
     );
 
 Map<String, dynamic> _$ApplicationItemToJson(ApplicationItem instance) =>
@@ -80,7 +80,7 @@ Map<String, dynamic> _$ApplicationItemToJson(ApplicationItem instance) =>
       'applicant': instance.applicant,
       'state': instance.state,
       'local_government': instance.localGovernment,
-      'approved_by': instance.approvedBy,
+      'approved_by': ApplicationItem._approvedByToJson(instance.approvedBy),
     };
 
 ApplicationListData _$ApplicationListDataFromJson(Map<String, dynamic> json) =>

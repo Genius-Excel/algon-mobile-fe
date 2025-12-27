@@ -88,7 +88,7 @@ RecentApplication _$RecentApplicationFromJson(Map<String, dynamic> json) =>
       state: StateData.fromJson(json['state'] as Map<String, dynamic>),
       localGovernment: LocalGovernmentData.fromJson(
           json['local_government'] as Map<String, dynamic>),
-      approvedBy: json['approved_by'] as String?,
+      approvedBy: RecentApplication._approvedByFromJson(json['approved_by']),
     );
 
 Map<String, dynamic> _$RecentApplicationToJson(RecentApplication instance) =>
@@ -114,7 +114,7 @@ Map<String, dynamic> _$RecentApplicationToJson(RecentApplication instance) =>
       'applicant': instance.applicant,
       'state': instance.state,
       'local_government': instance.localGovernment,
-      'approved_by': instance.approvedBy,
+      'approved_by': RecentApplication._approvedByToJson(instance.approvedBy),
     };
 
 AdminDashboardData _$AdminDashboardDataFromJson(Map<String, dynamic> json) =>

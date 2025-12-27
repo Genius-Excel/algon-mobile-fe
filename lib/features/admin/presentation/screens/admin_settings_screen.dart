@@ -4,6 +4,7 @@ import 'package:algon_mobile/src/constants/app_colors.dart';
 import 'package:algon_mobile/shared/widgets/admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/shared/widgets/super_admin_bottom_nav_bar.dart';
 import 'package:algon_mobile/features/auth/data/services/auth_service.dart';
+import '../../../../core/router/router.dart';
 
 @RoutePage(name: 'AdminSettings')
 class AdminSettingsScreen extends StatefulWidget {
@@ -66,9 +67,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             title: 'System Configuration',
                             subtitle: 'Configure global settings',
                             icon: Icons.settings,
-                            onTap: () => context.router
-                                .pushNamed('/super-admin/system-settings'),
+                            onTap: () => context.router.push(
+                              SystemSettings(isSuperAdmin: widget.isSuperAdmin),
+                            ),
                           ),
+                          const Divider(),
                           // const Divider(),
                           // _SettingsItem(
                           //   title: 'Audit Logs',
@@ -77,7 +80,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           //   onTap: () => context.router
                           //       .pushNamed('/super-admin/audit-log'),
                           // ),
-                          const Divider(),
                           _SettingsItem(
                             title: 'Backup & Security',
                             subtitle: 'Manage system backups',
@@ -110,8 +112,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.of(dialogContext)
-                                              .pop(true);
+                                          Navigator.of(dialogContext).pop(true);
                                         },
                                         style: TextButton.styleFrom(
                                           foregroundColor: Colors.red,
@@ -122,7 +123,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                   );
                                 },
                               );
-                      
+
                               if (shouldLogout == true && context.mounted) {
                                 await AuthService.logoutAndNavigate(context);
                               }
