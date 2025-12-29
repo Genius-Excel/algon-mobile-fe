@@ -367,7 +367,8 @@ class _InviteLGAdminDialog extends ConsumerStatefulWidget {
 
 class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   StateData? _selectedState;
   LocalGovernment? _selectedLG;
@@ -375,7 +376,8 @@ class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -405,7 +407,8 @@ class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
       final request = InviteLGAdminRequest(
         state: _selectedState!.id,
         lga: _selectedLG!.id,
-        fullName: _fullNameController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
       );
 
@@ -478,12 +481,24 @@ class _InviteLGAdminDialogState extends ConsumerState<_InviteLGAdminDialog> {
                 ),
                 const SizedBox(height: 24),
                 CustomTextField(
-                  controller: _fullNameController,
-                  label: 'Full Name',
-                  hint: 'Enter full name',
+                  controller: _firstNameController,
+                  label: 'First Name',
+                  hint: 'Enter first name',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Full name is required';
+                      return 'First name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _lastNameController,
+                  label: 'Last Name',
+                  hint: 'Enter Last Name',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Last name is required';
                     }
                     return null;
                   },

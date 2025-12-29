@@ -38,18 +38,18 @@ Map<String, dynamic> _$ExtraFieldToJson(ExtraField instance) =>
     };
 
 FeeData _$FeeDataFromJson(Map<String, dynamic> json) => FeeData(
-      applicationFee: json['application_fee'] as num?,
-      digitizationFee: json['digitization_fee'] as num?,
-      regenerationFee: json['regeneration_fee'] as num?,
+      applicationFee: FeeData._feeFromJson(json['application_fee']),
+      digitizationFee: FeeData._feeFromJson(json['digitization_fee']),
+      regenerationFee: FeeData._feeFromJson(json['regeneration_fee']),
       currency: json['currency'] as String,
       localGovernment: json['local_government'] as String?,
       lastUpdatedBy: json['last_updated_by'] as String?,
     );
 
 Map<String, dynamic> _$FeeDataToJson(FeeData instance) => <String, dynamic>{
-      'application_fee': instance.applicationFee,
-      'digitization_fee': instance.digitizationFee,
-      'regeneration_fee': instance.regenerationFee,
+      'application_fee': FeeData._feeToJson(instance.applicationFee),
+      'digitization_fee': FeeData._feeToJson(instance.digitizationFee),
+      'regeneration_fee': FeeData._feeToJson(instance.regenerationFee),
       'currency': instance.currency,
       'local_government': instance.localGovernment,
       'last_updated_by': instance.lastUpdatedBy,
@@ -59,7 +59,8 @@ UpdateApplicationData _$UpdateApplicationDataFromJson(
         Map<String, dynamic> json) =>
     UpdateApplicationData(
       fee: FeeData.fromJson(json['fee'] as Map<String, dynamic>),
-      verificationFee: json['verification_fee'] as num?,
+      verificationFee:
+          UpdateApplicationData._feeFromJson(json['verification_fee']),
       applicationId: json['application_id'] as String,
     );
 
@@ -67,7 +68,8 @@ Map<String, dynamic> _$UpdateApplicationDataToJson(
         UpdateApplicationData instance) =>
     <String, dynamic>{
       'fee': instance.fee,
-      'verification_fee': instance.verificationFee,
+      'verification_fee':
+          UpdateApplicationData._feeToJson(instance.verificationFee),
       'application_id': instance.applicationId,
     };
 

@@ -41,11 +41,11 @@ class ApplicationItem {
   @JsonKey(name: 'full_name')
   final String fullName;
   @JsonKey(name: 'date_of_birth')
-  final String dateOfBirth;
+  final String? dateOfBirth;
   @JsonKey(name: 'phone_number')
   final String phoneNumber;
   final String email;
-  final String village;
+  final String? village;
   @JsonKey(name: 'residential_address')
   final String? residentialAddress;
   final String? landmark;
@@ -70,17 +70,20 @@ class ApplicationItem {
   final StateData state;
   @JsonKey(name: 'local_government')
   final LocalGovernmentData localGovernment;
-  @JsonKey(name: 'approved_by', fromJson: _approvedByFromJson, toJson: _approvedByToJson)
+  @JsonKey(
+      name: 'approved_by',
+      fromJson: _approvedByFromJson,
+      toJson: _approvedByToJson)
   final String? approvedBy;
 
   const ApplicationItem({
     required this.id,
     required this.nin,
     required this.fullName,
-    required this.dateOfBirth,
+    this.dateOfBirth,
     required this.phoneNumber,
     required this.email,
-    required this.village,
+    this.village,
     this.residentialAddress,
     this.landmark,
     this.letterFromTraditionalRuler,
@@ -101,15 +104,25 @@ class ApplicationItem {
   factory ApplicationItem.fromJson(Map<String, dynamic> json) {
     // Create a copy to avoid mutating the original
     final jsonCopy = Map<String, dynamic>.from(json);
-    
+
+    // Handle application_status: digitization uses verification_status instead
+    if (!jsonCopy.containsKey('application_status') ||
+        jsonCopy['application_status'] == null) {
+      if (jsonCopy.containsKey('verification_status')) {
+        jsonCopy['application_status'] = jsonCopy['verification_status'];
+      } else {
+        jsonCopy['application_status'] = 'pending';
+      }
+    }
+
     // Remove application_type if present (not part of ApplicationItem model)
     jsonCopy.remove('application_type');
-    
+
     return _$ApplicationItemFromJson(jsonCopy);
   }
 
   Map<String, dynamic> toJson() => _$ApplicationItemToJson(this);
-  
+
   static String? _approvedByFromJson(dynamic json) {
     if (json == null) return null;
     if (json is String) return json;
@@ -119,7 +132,7 @@ class ApplicationItem {
     }
     return json.toString();
   }
-  
+
   static dynamic _approvedByToJson(String? approvedBy) => approvedBy;
 }
 
@@ -158,4 +171,3 @@ class ApplicationListResponse {
 
   Map<String, dynamic> toJson() => _$ApplicationListResponseToJson(this);
 }
-

@@ -34,10 +34,10 @@ ApplicationItem _$ApplicationItemFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       nin: json['nin'] as String,
       fullName: json['full_name'] as String,
-      dateOfBirth: json['date_of_birth'] as String,
+      dateOfBirth: json['date_of_birth'] as String?,
       phoneNumber: json['phone_number'] as String,
       email: json['email'] as String,
-      village: json['village'] as String,
+      village: json['village'] as String?,
       residentialAddress: json['residential_address'] as String?,
       landmark: json['landmark'] as String?,
       letterFromTraditionalRuler:

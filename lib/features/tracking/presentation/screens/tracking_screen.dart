@@ -22,51 +22,75 @@ class TrackingScreen extends ConsumerStatefulWidget {
 }
 
 class _TrackingScreenState extends ConsumerState<TrackingScreen> {
-  bool _isLoading = true;
-  bool _isLoadingMore = false;
-  List<ApplicationItem> _applications = [];
-  String? _nextUrl;
-  int _totalCount = 0;
-  final ScrollController _scrollController = ScrollController();
+  int _selectedTab = 0; // 0 = Certificate, 1 = Digitization
+
+  // Certificate applications
+  bool _isLoadingCertificate = true;
+  bool _isLoadingMoreCertificate = false;
+  List<ApplicationItem> _certificateApplications = [];
+  String? _nextUrlCertificate;
+  final ScrollController _certificateScrollController = ScrollController();
+
+  // Digitization applications
+  bool _isLoadingDigitization = true;
+  bool _isLoadingMoreDigitization = false;
+  List<ApplicationItem> _digitizationApplications = [];
+  String? _nextUrlDigitization;
+  final ScrollController _digitizationScrollController = ScrollController();
+
   static const int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
-    _fetchApplications();
-    _scrollController.addListener(_onScroll);
+    _certificateScrollController.addListener(_onCertificateScroll);
+    _digitizationScrollController.addListener(_onDigitizationScroll);
+    _fetchCertificateApplications();
+    _fetchDigitizationApplications();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _certificateScrollController.dispose();
+    _digitizationScrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent * 0.8 &&
-        _nextUrl != null &&
-        !_isLoadingMore) {
-      _loadMoreApplications();
+  void _onCertificateScroll() {
+    if (_certificateScrollController.position.pixels >=
+            _certificateScrollController.position.maxScrollExtent * 0.8 &&
+        _nextUrlCertificate != null &&
+        !_isLoadingMoreCertificate) {
+      _loadMoreCertificateApplications();
     }
   }
 
-  Future<void> _fetchApplications({bool refresh = false}) async {
+  void _onDigitizationScroll() {
+    if (_digitizationScrollController.position.pixels >=
+            _digitizationScrollController.position.maxScrollExtent * 0.8 &&
+        _nextUrlDigitization != null &&
+        !_isLoadingMoreDigitization) {
+      _loadMoreDigitizationApplications();
+    }
+  }
+
+  Future<void> _fetchCertificateApplications({bool refresh = false}) async {
     if (refresh) {
-      _nextUrl = null;
-      _applications.clear();
+      _nextUrlCertificate = null;
+      _certificateApplications.clear();
     }
 
     setState(() {
-      _isLoading = true;
+      _isLoadingCertificate = true;
     });
 
     try {
       final applicationRepo = ref.read(applicationRepositoryProvider);
-      final offset =
-          refresh || _applications.isEmpty ? 0 : _applications.length;
+      final offset = refresh || _certificateApplications.isEmpty
+          ? 0
+          : _certificateApplications.length;
       final result = await applicationRepo.getMyApplications(
+        applicationType: 'certificate',
         limit: _pageSize,
         offset: offset,
       );
@@ -77,31 +101,27 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             setState(() {
               final updatedList = refresh
                   ? List<ApplicationItem>.from(response.data.results)
-                  : List<ApplicationItem>.from(_applications)
+                  : List<ApplicationItem>.from(_certificateApplications)
                 ..addAll(response.data.results);
               updatedList.sort((a, b) {
                 try {
                   final dateA = DateTime.parse(a.createdAt);
                   final dateB = DateTime.parse(b.createdAt);
-                  return dateB
-                      .compareTo(dateA); // Descending order (newest first)
+                  return dateB.compareTo(dateA);
                 } catch (e) {
                   return 0;
                 }
               });
-              _applications = updatedList;
-              _nextUrl = response.data.next;
-              _totalCount = response.data.count;
-              _isLoading = false;
+              _certificateApplications = updatedList;
+              _nextUrlCertificate = response.data.next;
+              _isLoadingCertificate = false;
             });
-            print(
-                '✅ Loaded ${_applications.length}/$_totalCount applications in tracking screen');
           }
         },
         apiFailure: (error, statusCode) {
           if (mounted) {
             setState(() {
-              _isLoading = false;
+              _isLoadingCertificate = false;
             });
             if (error is ApiExceptions) {
               Toast.apiError(error, context);
@@ -113,7 +133,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       );
     } catch (e) {
       setState(() {
-        _isLoading = false;
+        _isLoadingCertificate = false;
       });
       if (mounted) {
         Toast.error('An unexpected error occurred: ${e.toString()}', context);
@@ -121,63 +141,174 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     }
   }
 
-  Future<void> _loadMoreApplications() async {
-    if (_nextUrl == null || _isLoadingMore) return;
+  Future<void> _loadMoreCertificateApplications() async {
+    if (_nextUrlCertificate == null || _isLoadingMoreCertificate) return;
 
     setState(() {
-      _isLoadingMore = true;
+      _isLoadingMoreCertificate = true;
     });
 
     try {
       final applicationRepo = ref.read(applicationRepositoryProvider);
       final result = await applicationRepo.getMyApplications(
+        applicationType: 'certificate',
         limit: _pageSize,
-        offset: _applications.length,
+        offset: _certificateApplications.length,
       );
 
       result.when(
         success: (response) {
           if (mounted) {
             setState(() {
-              // Create new list with existing items and new items
-              final updatedList = List<ApplicationItem>.from(_applications)
-                ..addAll(response.data.results);
-              // Sort by date (latest first)
+              final updatedList =
+                  List<ApplicationItem>.from(_certificateApplications)
+                    ..addAll(response.data.results);
               updatedList.sort((a, b) {
                 try {
                   final dateA = DateTime.parse(a.createdAt);
                   final dateB = DateTime.parse(b.createdAt);
-                  return dateB
-                      .compareTo(dateA); // Descending order (newest first)
+                  return dateB.compareTo(dateA);
                 } catch (e) {
-                  // If parsing fails, maintain original order
                   return 0;
                 }
               });
-              // Assign new list instance to trigger rebuild
-              _applications = updatedList;
-              _nextUrl = response.data.next;
-              _isLoadingMore = false;
+              _certificateApplications = updatedList;
+              _nextUrlCertificate = response.data.next;
+              _isLoadingMoreCertificate = false;
             });
-            print(
-                '✅ Loaded more: ${_applications.length}/$_totalCount applications');
           }
         },
         apiFailure: (error, statusCode) {
           if (mounted) {
             setState(() {
-              _isLoadingMore = false;
+              _isLoadingMoreCertificate = false;
             });
-            // Don't show error toast for pagination failures
-            print('❌ Failed to load more applications: $error');
           }
         },
       );
     } catch (e) {
       setState(() {
-        _isLoadingMore = false;
+        _isLoadingMoreCertificate = false;
       });
-      print('❌ Error loading more applications: $e');
+    }
+  }
+
+  Future<void> _fetchDigitizationApplications({bool refresh = false}) async {
+    if (refresh) {
+      _nextUrlDigitization = null;
+      _digitizationApplications.clear();
+    }
+
+    setState(() {
+      _isLoadingDigitization = true;
+    });
+
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final offset = refresh || _digitizationApplications.isEmpty
+          ? 0
+          : _digitizationApplications.length;
+      final result = await applicationRepo.getMyApplications(
+        applicationType: 'digitization',
+        limit: _pageSize,
+        offset: offset,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              final updatedList = refresh
+                  ? List<ApplicationItem>.from(response.data.results)
+                  : List<ApplicationItem>.from(_digitizationApplications)
+                ..addAll(response.data.results);
+              updatedList.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB.compareTo(dateA);
+                } catch (e) {
+                  return 0;
+                }
+              });
+              _digitizationApplications = updatedList;
+              _nextUrlDigitization = response.data.next;
+              _isLoadingDigitization = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingDigitization = false;
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingDigitization = false;
+      });
+      if (mounted) {
+        Toast.error('An unexpected error occurred: ${e.toString()}', context);
+      }
+    }
+  }
+
+  Future<void> _loadMoreDigitizationApplications() async {
+    if (_nextUrlDigitization == null || _isLoadingMoreDigitization) return;
+
+    setState(() {
+      _isLoadingMoreDigitization = true;
+    });
+
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final result = await applicationRepo.getMyApplications(
+        applicationType: 'digitization',
+        limit: _pageSize,
+        offset: _digitizationApplications.length,
+      );
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              final updatedList =
+                  List<ApplicationItem>.from(_digitizationApplications)
+                    ..addAll(response.data.results);
+              updatedList.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB.compareTo(dateA);
+                } catch (e) {
+                  return 0;
+                }
+              });
+              _digitizationApplications = updatedList;
+              _nextUrlDigitization = response.data.next;
+              _isLoadingMoreDigitization = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMoreDigitization = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingMoreDigitization = false;
+      });
     }
   }
 
@@ -196,7 +327,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               child: const Row(
                 children: [
                   Text(
-                    'ALGON',
+                    'Application Tracking',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -210,86 +341,34 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             Expanded(
               child: Container(
                 color: const Color(0xFFF9FAFB),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Application Tracking',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
+                    // Tab bar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildTab('Certificate', 0),
+                        _buildTab('Digitization', 1),
+                      ],
                     ),
-                    const SizedBox(height: 24),
+                    // Applications list
                     Expanded(
-                      child: _isLoading
-                          ? ListView.builder(
-                              itemCount: 5,
-                              itemBuilder: (context, index) {
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: index < 4 ? 16 : 0,
-                                  ),
-                                  child: const ShimmerApplicationCard(),
-                                );
-                              },
-                            )
-                          : _applications.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.inbox_outlined,
-                                        size: 64,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'No applications found',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : RefreshIndicator(
-                                  onRefresh: () =>
-                                      _fetchApplications(refresh: true),
-                                  child: ListView.builder(
-                                    controller: _scrollController,
-                                    itemCount: _applications.length +
-                                        (_isLoadingMore ? 1 : 0),
-                                    itemBuilder: (context, index) {
-                                      if (index >= _applications.length) {
-                                        // Loading more indicator
-                                        return const Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        );
-                                      }
-                                      final application = _applications[index];
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom:
-                                              index < _applications.length - 1
-                                                  ? 16
-                                                  : 0,
-                                        ),
-                                        child: _TrackingCard(
-                                          application: application,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                      child: Container(
+                        color: const Color(0xFFF9FAFB),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
+                            Expanded(
+                              child: _selectedTab == 0
+                                  ? _buildCertificateList()
+                                  : _buildDigitizationList(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -299,6 +378,165 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         ),
       ),
       bottomNavigationBar: const AppBottomNavBar(currentIndex: 1),
+    );
+  }
+
+  Widget _buildTab(String label, int index) {
+    final isSelected = _selectedTab == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTab = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF9FAFB) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: isSelected ? AppColors.gradientEnd : Colors.transparent),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: const Color(0xFF1F2937),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCertificateList() {
+    if (_isLoadingCertificate && _certificateApplications.isEmpty) {
+      return ListView.builder(
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < 4 ? 16 : 0),
+            child: const ShimmerApplicationCard(),
+          );
+        },
+      );
+    }
+
+    if (_certificateApplications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No certificate applications found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchCertificateApplications(refresh: true),
+      child: ListView.builder(
+        controller: _certificateScrollController,
+        itemCount: _certificateApplications.length +
+            (_isLoadingMoreCertificate ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= _certificateApplications.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          final application = _certificateApplications[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index < _certificateApplications.length - 1 ? 16 : 0,
+            ),
+            child: _TrackingCard(
+              application: application,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDigitizationList() {
+    if (_isLoadingDigitization && _digitizationApplications.isEmpty) {
+      return ListView.builder(
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < 4 ? 16 : 0),
+            child: const ShimmerApplicationCard(),
+          );
+        },
+      );
+    }
+
+    if (_digitizationApplications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No digitization applications found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchDigitizationApplications(refresh: true),
+      child: ListView.builder(
+        controller: _digitizationScrollController,
+        itemCount: _digitizationApplications.length +
+            (_isLoadingMoreDigitization ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= _digitizationApplications.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator.adaptive(),
+              ),
+            );
+          }
+          final application = _digitizationApplications[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index < _digitizationApplications.length - 1 ? 16 : 0,
+            ),
+            child: _TrackingCard(
+              application: application,
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -322,25 +560,6 @@ class _TrackingCard extends StatelessWidget {
     return '${application.localGovernment.name}, ${application.state.name}';
   }
 
-  String get _description {
-    switch (_status) {
-      case ApplicationStatus.approved:
-        return 'Application approved. Certificate ready for download.';
-      case ApplicationStatus.rejected:
-        return application.remarks ?? 'Application has been rejected.';
-      case ApplicationStatus.digitized:
-        return 'Digitization complete. Digital certificate issued.';
-      case ApplicationStatus.underReview:
-        return 'Under review by local government admin.';
-      case ApplicationStatus.pending:
-      default:
-        if (_paymentStatus == PaymentStatus.pending) {
-          return 'Payment pending. Please complete payment to proceed.';
-        }
-        return 'Application submitted and pending review.';
-    }
-  }
-
   bool get _hasDownloadButton {
     return _status == ApplicationStatus.approved ||
         _status == ApplicationStatus.digitized;
@@ -348,135 +567,133 @@ class _TrackingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      application.fullName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'NIN: ${application.nin}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (_paymentStatus == PaymentStatus.successful)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _paymentStatus.backgroundColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to application details/view screen
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(_paymentStatus.icon,
-                          size: 12, color: _paymentStatus.color),
-                      const SizedBox(width: 4),
                       Text(
-                        _paymentStatus.label,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: _paymentStatus.color,
+                        application.fullName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'NIN: ${application.nin}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _location,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormatter.formatDisplayDate(application.createdAt),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
                   ),
                 ),
-              if (_paymentStatus == PaymentStatus.successful)
-                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _status.backgroundColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_status.icon, size: 16, color: _status.color),
+                      const SizedBox(width: 6),
+                      Text(
+                        _status.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _status.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (_paymentStatus == PaymentStatus.successful) ...[
+              const SizedBox(height: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _status.backgroundColor,
-                  borderRadius: BorderRadius.circular(20),
+                  color: _paymentStatus.backgroundColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(_status.icon, size: 14, color: _status.color),
+                    Icon(_paymentStatus.icon,
+                        size: 12, color: _paymentStatus.color),
                     const SizedBox(width: 4),
                     Text(
-                      _status.label,
+                      _paymentStatus.label,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: _status.color,
+                        color: _paymentStatus.color,
                       ),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _location,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _description,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            DateFormatter.formatDisplayDate(application.createdAt),
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF9CA3AF),
-            ),
-          ),
-          if (_hasDownloadButton) ...[
-            const SizedBox(height: 12),
-            CustomButton(
-              text: 'Download',
-              iconData: Icons.download,
-              iconPosition: IconPosition.left,
-              onPressed: () {},
-              variant: ButtonVariant.primary,
-              fontSize: 14,
-            ),
+            if (_hasDownloadButton) ...[
+              const SizedBox(height: 12),
+              CustomButton(
+                text: 'Download',
+                iconData: Icons.download,
+                iconPosition: IconPosition.left,
+                onPressed: () {
+                  // TODO: Implement download functionality
+                },
+                variant: ButtonVariant.primary,
+                fontSize: 14,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

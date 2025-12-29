@@ -7,14 +7,17 @@ class InviteLGAdminRequest {
   final String state;
   @JsonKey(name: 'lga')
   final String lga;
-  @JsonKey(name: 'full_name')
-  final String fullName;
+  @JsonKey(name: 'first_name')
+  final String firstName;
+  @JsonKey(name: 'last_name')
+  final String lastName;
   final String email;
 
   const InviteLGAdminRequest({
     required this.state,
     required this.lga,
-    required this.fullName,
+    required this.firstName,
+    required this.lastName,
     required this.email,
   });
 

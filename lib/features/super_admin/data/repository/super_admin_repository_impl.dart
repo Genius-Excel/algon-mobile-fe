@@ -27,7 +27,8 @@ class SuperAdminRepositoryImpl implements SuperAdminRepository {
       print('   Endpoint: ${ApiEndpoints.inviteLGAdmin}');
       print('   State: ${request.state}');
       print('   LGA: ${request.lga}');
-      print('   Full Name: ${request.fullName}');
+      print('   First Name: ${request.firstName}');
+      print('   Last Name: ${request.lastName}');
       print('   Email: ${request.email}');
 
       final response = await apiClient.post(

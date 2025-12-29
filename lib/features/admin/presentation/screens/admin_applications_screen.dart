@@ -54,8 +54,12 @@ class _AdminApplicationsScreenState
   String? _nextUrlRejected;
   final ScrollController _rejectedScrollController = ScrollController();
 
-  // Digitization applications (placeholder for now)
+  // Digitization applications
   bool _isLoadingDigitization = true;
+  bool _isLoadingMoreDigitization = false;
+  List<ApplicationItem> _digitizationApplications = [];
+  String? _nextUrlDigitization;
+  final ScrollController _digitizationScrollController = ScrollController();
 
   @override
   void initState() {
@@ -63,6 +67,7 @@ class _AdminApplicationsScreenState
     _pendingScrollController.addListener(() => _onPendingScroll());
     _approvedScrollController.addListener(() => _onApprovedScroll());
     _rejectedScrollController.addListener(() => _onRejectedScroll());
+    _digitizationScrollController.addListener(() => _onDigitizationScroll());
     _fetchPendingApplications();
     _fetchApprovedApplications();
     _fetchRejectedApplications();
@@ -74,6 +79,7 @@ class _AdminApplicationsScreenState
     _pendingScrollController.dispose();
     _approvedScrollController.dispose();
     _rejectedScrollController.dispose();
+    _digitizationScrollController.dispose();
     super.dispose();
   }
 
@@ -101,6 +107,15 @@ class _AdminApplicationsScreenState
         _nextUrlRejected != null &&
         !_isLoadingMoreRejected) {
       _loadMoreRejectedApplications();
+    }
+  }
+
+  void _onDigitizationScroll() {
+    if (_digitizationScrollController.position.pixels >=
+            _digitizationScrollController.position.maxScrollExtent * 0.8 &&
+        _nextUrlDigitization != null &&
+        !_isLoadingMoreDigitization) {
+      _loadMoreDigitizationApplications();
     }
   }
 
@@ -466,11 +481,124 @@ class _AdminApplicationsScreenState
     }
   }
 
-  Future<void> _fetchDigitizationApplications() async {
-    // TODO: Implement when digitization endpoint is ready
+  Future<void> _fetchDigitizationApplications({bool refresh = false}) async {
+    if (refresh) {
+      _nextUrlDigitization = null;
+      _digitizationApplications.clear();
+    }
+
     setState(() {
-      _isLoadingDigitization = false;
+      _isLoadingDigitization = true;
     });
+
+    try {
+      final adminRepo = ref.read(adminRepositoryProvider);
+      final result = await adminRepo.getApplications(
+        applicationType: 'digitization',
+        limit: _pageSize,
+        offset: refresh || _digitizationApplications.isEmpty
+            ? 0
+            : _digitizationApplications.length,
+      );
+
+      result.when(
+        success: (ApplicationListResponse response) {
+          if (mounted) {
+            setState(() {
+              if (refresh) {
+                _digitizationApplications = response.data.results;
+              } else {
+                _digitizationApplications.addAll(response.data.results);
+              }
+              // Sort by date (latest first)
+              _digitizationApplications.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB.compareTo(dateA);
+                } catch (e) {
+                  return 0;
+                }
+              });
+              _nextUrlDigitization = response.data.next;
+              _isLoadingDigitization = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingDigitization = false;
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingDigitization = false;
+        });
+        Toast.error('Failed to load digitization applications: ${e.toString()}',
+            context);
+      }
+    }
+  }
+
+  Future<void> _loadMoreDigitizationApplications() async {
+    if (_nextUrlDigitization == null || _isLoadingMoreDigitization) return;
+
+    setState(() {
+      _isLoadingMoreDigitization = true;
+    });
+
+    try {
+      final adminRepo = ref.read(adminRepositoryProvider);
+      final result = await adminRepo.getApplications(
+        applicationType: 'digitization',
+        limit: _pageSize,
+        offset: _digitizationApplications.length,
+      );
+
+      result.when(
+        success: (ApplicationListResponse response) {
+          if (mounted) {
+            setState(() {
+              _digitizationApplications.addAll(response.data.results);
+              // Sort by date (latest first)
+              _digitizationApplications.sort((a, b) {
+                try {
+                  final dateA = DateTime.parse(a.createdAt);
+                  final dateB = DateTime.parse(b.createdAt);
+                  return dateB.compareTo(dateA);
+                } catch (e) {
+                  return 0;
+                }
+              });
+              _nextUrlDigitization = response.data.next;
+              _isLoadingMoreDigitization = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMoreDigitization = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMoreDigitization = false;
+        });
+      }
+    }
   }
 
   Future<void> _updateApplicationStatus({
@@ -871,7 +999,7 @@ class _AdminApplicationsScreenState
   }
 
   Widget _buildDigitizationList() {
-    if (_isLoadingDigitization) {
+    if (_isLoadingDigitization && _digitizationApplications.isEmpty) {
       return ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: 5,
@@ -884,13 +1012,50 @@ class _AdminApplicationsScreenState
       );
     }
 
-    return Center(
-      child: Text(
-        'No digitization applications',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey[600],
+    if (_digitizationApplications.isEmpty) {
+      return Center(
+        child: Text(
+          'No digitization applications',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
         ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchDigitizationApplications(refresh: true),
+      child: ListView.builder(
+        controller: _digitizationScrollController,
+        padding: const EdgeInsets.all(16),
+        itemCount: _digitizationApplications.length +
+            (_nextUrlDigitization != null ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= _digitizationApplications.length) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _isLoadingMoreDigitization
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator.adaptive(),
+                      )
+                    : const SizedBox(width: 24, height: 24),
+              ),
+            );
+          }
+          final application = _digitizationApplications[index];
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: index < _digitizationApplications.length - 1 ? 12 : 0),
+            child: _ApplicationCard(
+              application: application,
+              onTap: () {},
+            ),
+          );
+        },
       ),
     );
   }
