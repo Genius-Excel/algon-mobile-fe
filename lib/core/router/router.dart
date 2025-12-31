@@ -55,10 +55,11 @@ class HelperrRouter extends RootStackRouter {
         AutoRoute(page: DigitizationStep4.page, path: '/digitization/step4'),
         AutoRoute(page: VerifyCertificate.page, path: '/verify/certificate'),
         AutoRoute(page: AdminDashboard.page, path: '/admin/dashboard'),
-        AutoRoute(page: AdminApplications.page, path: '/admin/applications'),
+         AutoRoute(page: AdminApplications.page, path: '/admin/applications'),
         AutoRoute(
-            page: AdminApplicationDetail.page,
-            path: '/admin/application/detail'),
+          page: AdminApplicationDetailRoute.page, 
+          path: '/admin/applications/:id',
+        ),
         AutoRoute(page: AdminReports.page, path: '/admin/reports'),
         AutoRoute(page: AdminSettings.page, path: '/admin/settings'),
         AutoRoute(

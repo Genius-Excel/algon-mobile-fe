@@ -66,8 +66,7 @@ class AdminRepositoryImpl implements AdminRepository {
       print('   Response Data: ${response.data}');
 
       return Success(
-        data: LGAFeeResponse.fromJson(
-            response.data as Map<String, dynamic>),
+        data: LGAFeeResponse.fromJson(response.data as Map<String, dynamic>),
       );
     } on DioException catch (e) {
       print('❌ Get LGA Fee Error:');
@@ -223,7 +222,8 @@ class AdminRepositoryImpl implements AdminRepository {
       final apiClient = ref.read(apiClientProvider);
 
       print('🚀 Update Application Status API Call:');
-      print('   Endpoint: ${ApiEndpoints.updateApplicationStatus(applicationId, applicationType)}');
+      print(
+          '   Endpoint: ${ApiEndpoints.updateApplicationStatus(applicationId, applicationType)}');
       print('   Action: $action');
 
       final request = UpdateApplicationStatusRequest(
@@ -236,7 +236,8 @@ class AdminRepositoryImpl implements AdminRepository {
         data: request.toJson(),
       );
 
-      print('✅ Update Application Status Response Status: ${response.statusCode}');
+      print(
+          '✅ Update Application Status Response Status: ${response.statusCode}');
       print('   Response Data: ${response.data}');
 
       return Success(
@@ -261,5 +262,41 @@ class AdminRepositoryImpl implements AdminRepository {
       rethrow;
     }
   }
-}
 
+  @override
+  Future<ApiResult<ApplicationItem>> getApplicationDetails({
+    required String applicationId,
+    required String applicationType,
+  }) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.get(
+        'admin/applications/$applicationId',
+        queryParameters: {'application_type': applicationType},
+      );
+
+      print(
+          '✅ Get Application Details Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      final responseData = response.data as Map<String, dynamic>;
+      final data =
+          (responseData.containsKey('data') && responseData['data'] is Map)
+              ? responseData['data'] as Map<String, dynamic>
+              : responseData;
+
+      return Success(data: ApplicationItem.fromJson(data));
+      // return Success(data:  ApplicationItem.fromJson(
+      //   response.data['data'] as Map<String, dynamic>,
+      // ),
+      // );
+    } on DioException catch (e) {
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      rethrow;
+    }
+  }
+}

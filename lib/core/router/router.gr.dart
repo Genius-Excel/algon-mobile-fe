@@ -11,21 +11,53 @@ part of 'router.dart';
 
 /// generated route for
 /// [AdminApplicationDetailScreen]
-class AdminApplicationDetail extends PageRouteInfo<void> {
-  const AdminApplicationDetail({List<PageRouteInfo>? children})
-      : super(
-          AdminApplicationDetail.name,
+class AdminApplicationDetailRoute
+    extends PageRouteInfo<AdminApplicationDetailRouteArgs> {
+  AdminApplicationDetailRoute({
+    Key? key,
+    required String id,
+    List<PageRouteInfo>? children,
+  }) : super(
+          AdminApplicationDetailRoute.name,
+          args: AdminApplicationDetailRouteArgs(
+            key: key,
+            id: id,
+          ),
+          rawPathParams: {'id': id},
           initialChildren: children,
         );
 
-  static const String name = 'AdminApplicationDetail';
+  static const String name = 'AdminApplicationDetailRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const AdminApplicationDetailScreen();
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<AdminApplicationDetailRouteArgs>(
+          orElse: () =>
+              AdminApplicationDetailRouteArgs(id: pathParams.getString('id')));
+      return AdminApplicationDetailScreen(
+        key: args.key,
+        id: args.id,
+      );
     },
   );
+}
+
+class AdminApplicationDetailRouteArgs {
+  const AdminApplicationDetailRouteArgs({
+    this.key,
+    required this.id,
+  });
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'AdminApplicationDetailRouteArgs{key: $key, id: $id}';
+  }
 }
 
 /// generated route for

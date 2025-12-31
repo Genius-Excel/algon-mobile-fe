@@ -165,48 +165,43 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
     }
   }
 
-  @override
-  Future<ApiResult<ApplicationListResponse>> getMyApplications({
-    String? applicationType,
-    int? limit,
-    int? offset,
+  Future<ApiResult<ApplicationItem>> getApplicationDetails({
+    required String applicationId,
+    required String applicationType,
   }) async {
     try {
+      print('🚀 Get Application Details API Call:');
+      print('   Application ID: $applicationId');
+      print('   Application Type: $applicationType');
+
+ 
       final apiClient = ref.read(apiClientProvider);
 
-      final queryParams = <String, dynamic>{};
-      if (applicationType != null) {
-        queryParams['application_type'] = applicationType;
-      }
-      if (limit != null) {
-        queryParams['limit'] = limit;
-      }
-      if (offset != null) {
-        queryParams['offset'] = offset;
-      }
-
-      print('🚀 Get My Applications API Call:');
-      print('   Endpoint: ${ApiEndpoints.myApplications}');
-      print('   Query Params: $queryParams');
-
       final response = await apiClient.get(
-        ApiEndpoints.myApplications,
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        '/admin/applications/$applicationId',
+        queryParameters: {'application_type': applicationType},
       );
 
-      print('✅ Get Applications Response Status: ${response.statusCode}');
+      print(
+          '✅ Get Application Details Response Status: ${response.statusCode}');
       print('   Response Data: ${response.data}');
 
       final responseData = response.data as Map<String, dynamic>;
-      final parsedResponse = ApplicationListResponse.fromJson(responseData);
-      
-      print('✅ Successfully parsed ${parsedResponse.data.results.length} applications');
-      print('   Total count: ${parsedResponse.data.count}');
-      print('   Has next: ${parsedResponse.data.next != null}');
-      
-      return Success(data: parsedResponse);
+
+      // Parse the response
+      ApplicationItem application;
+
+      if (responseData.containsKey('data')) {
+        // Response has {message, data} structure
+        application = ApplicationItem.fromJson(responseData['data']);
+      } else {
+        // Direct application object
+        application = ApplicationItem.fromJson(responseData);
+      }
+
+       return Success(data: application);
     } on DioException catch (e) {
-      print('❌ Get Applications Error:');
+      print('❌ Get Application Details Error:');
       print('   Type: ${e.type}');
       print('   Message: ${e.message}');
       print('   Status Code: ${e.response?.statusCode}');
@@ -217,18 +212,67 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
         statusCode: e.response?.statusCode ?? -1,
       );
     } catch (e, stackTrace) {
-      print('❌ Unexpected Get Applications Error:');
+      print('❌ Unexpected Get Application Details Error:');
       print('   Error: $e');
       print('   StackTrace: $stackTrace');
-      
+
       return ApiFailure(
-        error: ApiExceptions.errorResponse(
-          error: 'Failed to parse applications: ${e.toString()}',
-        ),
+        error: ApiExceptions.getDioException(e)!,
         statusCode: -1,
       );
     }
   }
+
+  @override
+  Future<ApiResult<ApplicationListResponse>> getMyApplications({
+    String? applicationType,
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      print('🚀 Get My Applications API Call:');
+      print('   Endpoint: ${ApiEndpoints.myApplications}');
+      print('   Limit: $limit, Offset: $offset');
+
+      final response = await apiClient.get(
+        ApiEndpoints.myApplications,
+        queryParameters: {
+          if (limit != null) 'limit': limit,
+          if (applicationType != null) 'application_type': applicationType,
+        },
+      );
+
+      print('✅ Get My Applications Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return Success(
+        data: ApplicationListResponse.fromJson(
+            response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('❌ Get My Applications Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Get My Applications Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+
+
+
 
   @override
   Future<ApiResult<void>> verifyNin(String id, String type) async {

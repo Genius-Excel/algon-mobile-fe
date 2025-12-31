@@ -7,6 +7,7 @@ import '../models/lga_fee_models.dart';
 import '../models/admin_application_models.dart';
 import 'admin_repository_impl.dart';
 
+
 abstract class AdminRepository {
   Future<ApiResult<AdminDashboardResponse>> getDashboard();
   Future<ApiResult<LGAFeeResponse>> getLgaFee();
@@ -18,10 +19,17 @@ abstract class AdminRepository {
     int limit = 20,
     int offset = 0,
   });
+  
+  // Make sure this method is declared here:
+  Future<ApiResult<ApplicationItem>> getApplicationDetails({
+    required String applicationId,
+    required String applicationType,
+  });
+  
   Future<ApiResult<UpdateApplicationStatusResponse>> updateApplicationStatus({
     required String applicationId,
     required String applicationType,
-    required String action, // 'approved' or 'rejected'
+    required String action,
   });
 }
 

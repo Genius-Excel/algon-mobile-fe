@@ -115,7 +115,6 @@ class ApplicationItem {
       }
     }
 
-    // Remove application_type if present (not part of ApplicationItem model)
     jsonCopy.remove('application_type');
 
     return _$ApplicationItemFromJson(jsonCopy);
@@ -171,3 +170,22 @@ class ApplicationListResponse {
 
   Map<String, dynamic> toJson() => _$ApplicationListResponseToJson(this);
 }
+
+
+@JsonSerializable()
+class ApplicationDetailsResponse {
+  final String message;
+  final ApplicationItem data;
+
+  const ApplicationDetailsResponse({
+    required this.message,
+    required this.data,
+  });
+
+  factory ApplicationDetailsResponse.fromJson(Map<String, dynamic> json) =>
+      _$ApplicationDetailsResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ApplicationDetailsResponseToJson(this);
+}
+
+

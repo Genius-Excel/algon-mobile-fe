@@ -115,3 +115,17 @@ Map<String, dynamic> _$ApplicationListResponseToJson(
       'message': instance.message,
       'data': instance.data,
     };
+
+ApplicationDetailsResponse _$ApplicationDetailsResponseFromJson(
+        Map<String, dynamic> json) =>
+    ApplicationDetailsResponse(
+      message: json['message'] as String,
+      data: ApplicationItem.fromJson(json['data'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$ApplicationDetailsResponseToJson(
+        ApplicationDetailsResponse instance) =>
+    <String, dynamic>{
+      'message': instance.message,
+      'data': instance.data,
+    };
