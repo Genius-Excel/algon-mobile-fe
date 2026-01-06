@@ -9,6 +9,7 @@ import '../../../application/data/models/application_list_models.dart';
 import '../models/admin_dashboard_models.dart';
 import '../models/lga_fee_models.dart';
 import '../models/admin_application_models.dart';
+import '../models/admin_reports_models.dart';
 import 'admin_repository.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
@@ -295,7 +296,43 @@ class AdminRepositoryImpl implements AdminRepository {
         error: ApiExceptions.getDioException(e)!,
         statusCode: e.response?.statusCode ?? -1,
       );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApiResult<AdminReportsResponse>> getReportAnalytics() async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      print('🚀 Get Report Analytics API Call:');
+      print('   Endpoint: ${ApiEndpoints.adminReportAnalytics}');
+
+      final response = await apiClient.get(ApiEndpoints.adminReportAnalytics);
+
+      print('✅ Get Report Analytics Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return Success(
+        data: AdminReportsResponse.fromJson(
+            response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('❌ Get Report Analytics Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
     } catch (e, stackTrace) {
+      print('❌ Unexpected Get Report Analytics Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
       rethrow;
     }
   }
