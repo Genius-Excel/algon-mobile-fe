@@ -33,6 +33,7 @@ class ApiEndpoints {
   static const String adminDashboard = '/admin/dashboard';
   static const String lgaFee = '/application-fees/local-government';
   static const String adminReportAnalytics = '/admin/report-analytics';
+  static String adminExportCsv(String type) => '/admin/export-csv?type=$type';
   static String adminApplications(String applicationType) =>
       '/admin/applications?application_type=$applicationType';
   static String updateApplicationStatus(

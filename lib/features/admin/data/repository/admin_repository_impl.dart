@@ -336,4 +336,44 @@ class AdminRepositoryImpl implements AdminRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<ApiResult<String>> exportCsv({required String type}) async {
+    try {
+      final dio = ref.read(dioProvider);
+
+      print('🚀 Export CSV API Call:');
+      print('   Endpoint: ${ApiEndpoints.adminExportCsv(type)}');
+
+      final response = await dio.post(
+        ApiEndpoints.adminExportCsv(type),
+        options: Options(
+          responseType: ResponseType.plain, // Get as text/string
+        ),
+      );
+
+      print('✅ Export CSV Response Status: ${response.statusCode}');
+      print(
+          '   Response Length: ${response.data.toString().length} characters');
+
+      final csvData = response.data.toString();
+      return Success(data: csvData);
+    } on DioException catch (e) {
+      print('❌ Export CSV Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Export CSV Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
 }

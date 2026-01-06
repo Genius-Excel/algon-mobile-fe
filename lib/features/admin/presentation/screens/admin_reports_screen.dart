@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:algon_mobile/shared/widgets/margin.dart';
 import 'package:algon_mobile/src/res/styles.dart';
 import 'package:auto_route/auto_route.dart';
@@ -11,6 +12,9 @@ import 'package:algon_mobile/features/admin/data/repository/admin_repository.dar
 import 'package:algon_mobile/features/admin/data/models/admin_reports_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
 
 @RoutePage(name: 'AdminReports')
 class AdminReportsScreen extends ConsumerStatefulWidget {
@@ -86,6 +90,98 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
       return DateFormat('MMM').format(date);
     } catch (e) {
       return isoDateString;
+    }
+  }
+
+  Future<void> _exportCsv() async {
+    try {
+      // Show loading indicator
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final adminRepo = ref.read(adminRepositoryProvider);
+      final result = await adminRepo.exportCsv(type: 'applications');
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      result.when(
+        success: (String csvData) async {
+          try {
+            // Get temporary directory
+            final directory = await getTemporaryDirectory();
+            final timestamp =
+                DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+            final file = File('${directory.path}/applications_$timestamp.csv');
+
+            // Write CSV data to file
+            await file.writeAsString(csvData);
+
+            // Share the file
+            try {
+              final xFile = XFile(file.path);
+              await Share.shareXFiles(
+                [xFile],
+                subject: 'Applications Export',
+                text:
+                    'Applications data exported on ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}',
+              );
+
+              if (mounted) {
+                Toast.success('CSV exported successfully', context);
+              }
+            } catch (shareError) {
+              // Fallback: Try sharing as text if file sharing fails
+              if (shareError.toString().contains('MissingPluginException')) {
+                // Try sharing as plain text as fallback
+                await Share.share(
+                  csvData,
+                  subject: 'Applications Export',
+                );
+                if (mounted) {
+                  Toast.success('CSV data shared successfully', context);
+                }
+              } else {
+                rethrow;
+              }
+            }
+          } catch (e) {
+            if (mounted) {
+              final errorMsg = e.toString();
+              if (errorMsg.contains('MissingPluginException')) {
+                Toast.error(
+                  'Please restart the app to enable file sharing',
+                  context,
+                );
+              } else {
+                Toast.error(
+                    'Failed to save CSV file: ${e.toString()}', context);
+              }
+            }
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog if still open
+        Toast.error('Failed to export CSV: ${e.toString()}', context);
+      }
     }
   }
 
@@ -340,7 +436,7 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
                                   child: CustomButton(
                                     text: 'Export as CSV',
                                     iconData: Icons.download,
-                                    onPressed: () {},
+                                    onPressed: _exportCsv,
                                   ),
                                 ),
                                 const ColSpacing(12),

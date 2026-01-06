@@ -33,6 +33,8 @@ abstract class AdminRepository {
   });
 
   Future<ApiResult<AdminReportsResponse>> getReportAnalytics();
+
+  Future<ApiResult<String>> exportCsv({required String type});
 }
 
 final adminRepositoryProvider = Provider<AdminRepository>((ref) {
