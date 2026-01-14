@@ -9,14 +9,14 @@ part of 'audit_log_models.dart';
 AuditLogItem _$AuditLogItemFromJson(Map<String, dynamic> json) => AuditLogItem(
       id: json['id'] as String,
       actionType: json['action_type'] as String,
-      tableName: json['table_name'] as String,
+      tableName: json['table_name'] as String?,
       recordId: json['record_id'] as String?,
       changes: json['changes'],
-      description: json['description'] as String,
+      description: json['description'] as String?,
       ipAddress: json['ip_address'] as String?,
       userAgent: json['user_agent'] as String?,
       createdAt: json['created_at'] as String,
-      user: json['user'] as String,
+      user: json['user'] as String?,
     );
 
 Map<String, dynamic> _$AuditLogItemToJson(AuditLogItem instance) =>

@@ -349,7 +349,7 @@ class _AuditLogItemWidget extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        log.description,
+                        log.description ?? 'No description',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -376,7 +376,7 @@ class _AuditLogItemWidget extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                if (log.tableName.isNotEmpty) ...[
+                if (log.tableName != null && log.tableName!.isNotEmpty) ...[
                   Text(
                     'Table: ${log.tableName}',
                     style: TextStyle(

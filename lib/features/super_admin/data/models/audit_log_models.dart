@@ -8,30 +8,30 @@ class AuditLogItem {
   @JsonKey(name: 'action_type')
   final String actionType;
   @JsonKey(name: 'table_name')
-  final String tableName;
+  final String? tableName;
   @JsonKey(name: 'record_id')
   final String? recordId;
   final dynamic changes; // Can be object, string, or null
-  final String description;
+  final String? description;
   @JsonKey(name: 'ip_address')
   final String? ipAddress;
   @JsonKey(name: 'user_agent')
   final String? userAgent;
   @JsonKey(name: 'created_at')
   final String createdAt;
-  final String user; // User ID
+  final String? user; // User ID
 
   const AuditLogItem({
     required this.id,
     required this.actionType,
-    required this.tableName,
+    this.tableName,
     this.recordId,
     this.changes,
-    required this.description,
+    this.description,
     this.ipAddress,
     this.userAgent,
     required this.createdAt,
-    required this.user,
+    this.user,
   });
 
   factory AuditLogItem.fromJson(Map<String, dynamic> json) =>
