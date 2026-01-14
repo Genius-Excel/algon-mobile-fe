@@ -12,6 +12,7 @@ import 'package:algon_mobile/features/application/data/repository/application_re
 import 'package:algon_mobile/features/application/data/models/application_list_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
+import 'package:algon_mobile/core/router/router.dart';
 
 @RoutePage(name: 'Tracking')
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -569,7 +570,9 @@ class _TrackingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to application details/view screen
+        context.pushRoute(
+          ApplicationDetailRoute(id: application.id),
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),

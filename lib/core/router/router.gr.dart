@@ -728,6 +728,57 @@ class ThirdOnboarding extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ApplicationDetailScreen]
+class ApplicationDetailRoute
+    extends PageRouteInfo<ApplicationDetailRouteArgs> {
+  ApplicationDetailRoute({
+    Key? key,
+    required String id,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ApplicationDetailRoute.name,
+          args: ApplicationDetailRouteArgs(
+            key: key,
+            id: id,
+          ),
+          rawPathParams: {'id': id},
+          initialChildren: children,
+        );
+
+  static const String name = 'ApplicationDetailRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<ApplicationDetailRouteArgs>(
+          orElse: () =>
+              ApplicationDetailRouteArgs(id: pathParams.getString('id')));
+      return ApplicationDetailScreen(
+        key: args.key,
+        id: args.id,
+      );
+    },
+  );
+}
+
+class ApplicationDetailRouteArgs {
+  const ApplicationDetailRouteArgs({
+    this.key,
+    required this.id,
+  });
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'ApplicationDetailRouteArgs{key: $key, id: $id}';
+  }
+}
+
+/// generated route for
 /// [TrackingScreen]
 class Tracking extends PageRouteInfo<void> {
   const Tracking({List<PageRouteInfo>? children})

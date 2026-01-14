@@ -27,7 +27,6 @@ class _AdminApplicationsScreenState
     // Ensure pending applications are fetched when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(applicationListControllerProvider);
-      // Trigger fetch if pending tab is selected and data hasn't loaded
       if (controller.pendingApplications.isEmpty &&
           !controller.isLoadingPending) {
         controller.fetchPendingApplications();

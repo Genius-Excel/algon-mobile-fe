@@ -13,6 +13,7 @@ import '../../features/application/presentation/screens/new_application_step1_sc
 import '../../features/application/presentation/screens/new_application_step2_screen.dart';
 import '../../features/application/presentation/screens/new_application_step3_screen.dart';
 import '../../features/application/presentation/screens/new_application_step4_screen.dart';
+import '../../features/application/presentation/screens/application_detail_screen.dart';
 import '../../features/auth/presentation/screens/screens.dart';
 import '../../features/digitization/presentation/screens/digitization_screens.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -43,6 +44,10 @@ class HelperrRouter extends RootStackRouter {
             page: ForgotPasswordStep3.page, path: '/forgot-password/step3'),
         AutoRoute(page: Home.page, path: '/home'),
         AutoRoute(page: Tracking.page, path: '/tracking'),
+        AutoRoute(
+          page: ApplicationDetailRoute.page,
+          path: '/application/detail/:id',
+        ),
         AutoRoute(page: Alerts.page, path: '/alerts'),
         AutoRoute(page: Profile.page, path: '/profile'),
         AutoRoute(page: NewApplicationStep1.page, path: '/application/step1'),
@@ -55,9 +60,9 @@ class HelperrRouter extends RootStackRouter {
         AutoRoute(page: DigitizationStep4.page, path: '/digitization/step4'),
         AutoRoute(page: VerifyCertificate.page, path: '/verify/certificate'),
         AutoRoute(page: AdminDashboard.page, path: '/admin/dashboard'),
-         AutoRoute(page: AdminApplications.page, path: '/admin/applications'),
+        AutoRoute(page: AdminApplications.page, path: '/admin/applications'),
         AutoRoute(
-          page: AdminApplicationDetailRoute.page, 
+          page: AdminApplicationDetailRoute.page,
           path: '/admin/applications/:id',
         ),
         AutoRoute(page: AdminReports.page, path: '/admin/reports'),
