@@ -62,7 +62,7 @@ class _NewApplicationStep1ScreenState
           final email = profile.data.email;
           final nin = profile.data.nin;
           final phoneNumber = profile.data.phoneNumber;
-
+          final fullName = profile.data.fullName;
           if (email.isNotEmpty) {
             _emailController.text = email;
           }
@@ -71,6 +71,9 @@ class _NewApplicationStep1ScreenState
           }
           if (phoneNumber != null && phoneNumber.isNotEmpty) {
             _phoneController.text = phoneNumber;
+          }
+          if (fullName.isNotEmpty) {
+            _fullNameController.text = fullName;
           }
         }
       });
@@ -239,6 +242,7 @@ class _NewApplicationStep1ScreenState
                                 controller: _fullNameController,
                                 label: 'Full Name',
                                 hint: 'As shown on NIN',
+                                readOnly: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Full name is required';
@@ -396,7 +400,7 @@ class _NewApplicationStep1ScreenState
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               child: CustomButton(
                 text: 'Next',
-                iconData: Icons.arrow_forward,
+                isLoading: _isLoadingStates,
                 onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     // Validate required files

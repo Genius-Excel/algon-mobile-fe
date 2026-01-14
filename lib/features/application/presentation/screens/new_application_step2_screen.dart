@@ -26,37 +26,20 @@ class NewApplicationStep2Screen extends ConsumerStatefulWidget {
 class _NewApplicationStep2ScreenState
     extends ConsumerState<NewApplicationStep2Screen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _landmarkController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final formData = ref.read(applicationFormProvider);
-      if (formData.email != null && _emailController.text.isEmpty) {
-        _emailController.text = formData.email!;
-      }
-      if (formData.phoneNumber != null && _phoneController.text.isEmpty) {
-        _phoneController.text = formData.phoneNumber!;
-      }
-    });
   }
 
   String? _selectedLetterFileName;
   String? _selectedLetterFilePath;
-  String? _selectedNinSlipFileName;
-  String? _selectedNinSlipFilePath;
-  String? _selectedProfilePhotoFileName;
-  String? _selectedProfilePhotoFilePath;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _phoneController.dispose();
     _addressController.dispose();
     _landmarkController.dispose();
     super.dispose();
@@ -101,7 +84,8 @@ class _NewApplicationStep2ScreenState
         apiFormData['extra_fields'] = extraFields;
       }
 
-      // Prepare files - all are required by API
+      // Prepare files - only letter from traditional ruler is needed here.
+      // NIN slip and profile photo were already uploaded in Step 1.
       final files = <MapEntry<String, String>>[];
 
       if (_selectedLetterFilePath == null) {
@@ -109,21 +93,9 @@ class _NewApplicationStep2ScreenState
         setState(() => _isLoading = false);
         return;
       }
-      if (_selectedNinSlipFilePath == null) {
-        Toast.error('Please upload NIN slip', context);
-        setState(() => _isLoading = false);
-        return;
-      }
-      if (_selectedProfilePhotoFilePath == null) {
-        Toast.error('Please upload profile photo', context);
-        setState(() => _isLoading = false);
-        return;
-      }
 
       files.add(
           MapEntry('letter_from_traditional_ruler', _selectedLetterFilePath!));
-      files.add(MapEntry('nin_slip', _selectedNinSlipFilePath!));
-      files.add(MapEntry('profile_photo', _selectedProfilePhotoFilePath!));
 
       // Update application via PATCH (Step 2)
       final result = await applicationRepo.updateCertificateApplication(
@@ -134,10 +106,10 @@ class _NewApplicationStep2ScreenState
 
       result.when(
         success: (response) {
-          // Save Step 2 data and fees
+          // Save Step 2 data and fees (reuse email/phone from Step 1)
           formData.setStep2Data(
-            email: _emailController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
+            email: formData.email ?? '',
+            phoneNumber: formData.phoneNumber ?? '',
             residentialAddress: _addressController.text.trim().isNotEmpty
                 ? _addressController.text.trim()
                 : null,
@@ -206,48 +178,12 @@ class _NewApplicationStep2ScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Contact Information',
+                          'Residential Information',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.blackColor,
                           ),
-                        ),
-                        const ColSpacing(16),
-                        CustomTextField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          hint: 'your.email@example.com',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email is required';
-                            }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                .hasMatch(value)) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const ColSpacing(16),
-                        CustomTextField(
-                          controller: _phoneController,
-                          label: 'Phone Number',
-                          hint: '+234 800 000 0000',
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Phone number is required';
-                            }
-                            // Remove + and spaces for validation
-                            final cleaned =
-                                value.replaceAll(RegExp(r'[\s+]'), '');
-                            if (cleaned.length < 10) {
-                              return 'Please enter a valid phone number';
-                            }
-                            return null;
-                          },
                         ),
                         const ColSpacing(16),
                         CustomTextField(
@@ -281,18 +217,6 @@ class _NewApplicationStep2ScreenState
                           label: 'Letter from Traditional Ruler',
                           fileName: _selectedLetterFileName,
                           onTap: _pickLetterFile,
-                        ),
-                        const ColSpacing(16),
-                        _buildFileUploader(
-                          label: 'NIN Slip',
-                          fileName: _selectedNinSlipFileName,
-                          onTap: _pickNinSlipFile,
-                        ),
-                        const ColSpacing(16),
-                        _buildFileUploader(
-                          label: 'Profile Photo',
-                          fileName: _selectedProfilePhotoFileName,
-                          onTap: _pickProfilePhotoFile,
                         ),
                       ],
                     ),
@@ -422,38 +346,6 @@ class _NewApplicationStep2ScreenState
         setState(() {
           _selectedLetterFileName = result.files.single.name;
           _selectedLetterFilePath = filePath;
-        });
-      }
-    }
-  }
-
-  Future<void> _pickNinSlipFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-    );
-    if (result != null && result.files.single.path != null) {
-      final filePath = result.files.single.path!;
-      final fileSize = await _checkFileSize(filePath, 'NIN Slip');
-      if (fileSize != null) {
-        setState(() {
-          _selectedNinSlipFileName = result.files.single.name;
-          _selectedNinSlipFilePath = filePath;
-        });
-      }
-    }
-  }
-
-  Future<void> _pickProfilePhotoFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
-    if (result != null && result.files.single.path != null) {
-      final filePath = result.files.single.path!;
-      final fileSize = await _checkFileSize(filePath, 'Profile Photo');
-      if (fileSize != null) {
-        setState(() {
-          _selectedProfilePhotoFileName = result.files.single.name;
-          _selectedProfilePhotoFilePath = filePath;
         });
       }
     }

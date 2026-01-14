@@ -239,7 +239,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             bottom: app == _recentApplications.last ? 0 : 12,
                           ),
                           child: RecentApplicationCard(
-                            name: app.fullName.substring(0, 8).toUpperCase(),
+                            name: app.fullName.length > 8
+                                ? app.fullName.substring(0, 8).toUpperCase()
+                                : app.fullName.toUpperCase(),
                             location:
                                 '${app.localGovernment.name}, ${app.state.name}',
                             date: DateFormatter.formatDisplayDate(

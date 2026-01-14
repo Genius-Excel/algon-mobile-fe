@@ -12,6 +12,8 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       phoneNumber: json['phone_number'] as String,
       password: json['password'] as String,
       nin: json['nin'] as String?,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -20,6 +22,8 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'phone_number': instance.phoneNumber,
       'password': instance.password,
       'nin': instance.nin,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
     };
 
 RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
@@ -41,6 +45,8 @@ RegisterData _$RegisterDataFromJson(Map<String, dynamic> json) => RegisterData(
       email: json['email'] as String,
       role: json['role'] as String,
       phoneNumber: json['phone_number'] as String,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
     );
 
 Map<String, dynamic> _$RegisterDataToJson(RegisterData instance) =>
@@ -49,4 +55,6 @@ Map<String, dynamic> _$RegisterDataToJson(RegisterData instance) =>
       'email': instance.email,
       'role': instance.role,
       'phone_number': instance.phoneNumber,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
     };

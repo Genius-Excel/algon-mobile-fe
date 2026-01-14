@@ -110,6 +110,8 @@ class AuthRepositoryImpl implements AuthRepository {
         'email': request.email,
         'phone_number': request.phoneNumber,
         'password': request.password,
+        'first_name': request.firstName,
+        'last_name': request.lastName
       };
 
       if (request.nin != null && request.nin!.isNotEmpty) {

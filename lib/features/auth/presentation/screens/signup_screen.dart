@@ -26,6 +26,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -38,6 +40,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
@@ -58,6 +62,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       final authService = ref.read(authServiceProvider);
 
       final request = RegisterRequest(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         password: _passwordController.text,
@@ -179,6 +185,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     key: _formKey,
                     child: ListView(
                       children: [
+                        CustomTextField(
+                          controller: _firstNameController,
+                          label: 'First Name',
+                          hint: 'Enter your first name',
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your first name';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(
+                          height: 16,
+                        ),
+                        CustomTextField(
+                          controller: _lastNameController,
+                          label: 'Last Name',
+                          hint: 'Enter your last name',
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your last name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
                         CustomTextField(
                           controller: _ninController,
                           label: 'National Identity Number (NIN)',

@@ -235,18 +235,6 @@ class _NewApplicationStep3ScreenState
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
-                      _PaymentOption(
-                        title: 'Bank Transfer',
-                        subtitle: 'Direct bank payment',
-                        icon: Icons.account_balance,
-                        isSelected: _selectedPaymentMethod == 'bank',
-                        onTap: () {
-                          setState(() {
-                            _selectedPaymentMethod = 'bank';
-                          });
-                        },
-                      ),
                       const SizedBox(height: 24),
                       const Center(
                         child: Text(

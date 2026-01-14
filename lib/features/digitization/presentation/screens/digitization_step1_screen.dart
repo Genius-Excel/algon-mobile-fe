@@ -59,6 +59,7 @@ class _DigitizationStep1ScreenState
           final email = profile.data.email;
           final nin = profile.data.nin;
           final phoneNumber = profile.data.phoneNumber;
+          final fullName = profile.data.fullName;
 
           if (email.isNotEmpty) {
             _emailController.text = email;
@@ -68,6 +69,9 @@ class _DigitizationStep1ScreenState
           }
           if (phoneNumber != null && phoneNumber.isNotEmpty) {
             _phoneController.text = phoneNumber;
+          }
+          if (fullName.isNotEmpty) {
+            _fullNameController.text = fullName;
           }
         }
       });
@@ -208,6 +212,7 @@ class _DigitizationStep1ScreenState
                               CustomTextField(
                                 controller: _fullNameController,
                                 label: 'Full Name',
+                                readOnly: true,
                                 hint: 'As shown on NIN',
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
