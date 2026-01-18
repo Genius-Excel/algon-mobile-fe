@@ -274,7 +274,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: _isLoadingMore
-                                        ? const CircularProgressIndicator()
+                                        ? const CircularProgressIndicator.adaptive()
                                         : const SizedBox.shrink(),
                                   ),
                                 );

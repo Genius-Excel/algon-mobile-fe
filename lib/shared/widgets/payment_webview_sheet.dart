@@ -42,10 +42,10 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
             setState(() {
               _isLoading = false;
             });
-            
+
             // Check if payment is completed
             _checkPaymentStatus(url);
-            
+
             // Also inject JavaScript to monitor page content
             _injectPaymentDetectionScript();
           },
@@ -99,10 +99,10 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
 
   void _checkPaymentStatus(String url) {
     if (_paymentCompleted) return; // Already processed
-    
+
     print('🔍 Checking payment status for URL: $url');
     final lowerUrl = url.toLowerCase();
-    
+
     // Check for common payment success indicators in URL
     final successIndicators = [
       'success',
@@ -133,18 +133,20 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
         // Check for status parameter
         final status = uri.queryParameters['status']?.toLowerCase();
         final reference = uri.queryParameters['reference'];
-        
+
         print('📊 Paystack URL - Status: $status, Reference: $reference');
-        
-        if (status == 'success' || status == 'approved' || status == 'completed') {
+
+        if (status == 'success' ||
+            status == 'approved' ||
+            status == 'completed') {
           print('✅ Payment status is success');
           _handlePaymentSuccess();
           return;
         }
-        
+
         // Check for callback URLs that typically indicate completion
-        if (lowerUrl.contains('callback') || 
-            lowerUrl.contains('verify') || 
+        if (lowerUrl.contains('callback') ||
+            lowerUrl.contains('verify') ||
             lowerUrl.contains('redirect') ||
             lowerUrl.contains('success') ||
             reference != null) {
@@ -155,8 +157,8 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
                 print('📄 Page title: $title');
                 if (title != null && mounted) {
                   final lowerTitle = title.toLowerCase();
-                  if (lowerTitle.contains('success') || 
-                      lowerTitle.contains('approved') || 
+                  if (lowerTitle.contains('success') ||
+                      lowerTitle.contains('approved') ||
                       lowerTitle.contains('completed') ||
                       lowerTitle.contains('thank you') ||
                       lowerTitle.contains('payment successful')) {
@@ -170,7 +172,7 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
         }
       }
     }
-    
+
     // Also check for any redirect URLs that might indicate completion
     if (lowerUrl.contains('redirect') || lowerUrl.contains('return')) {
       Future.delayed(const Duration(milliseconds: 2000), () {
@@ -187,10 +189,10 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
 
   void _handlePaymentSuccess() {
     if (_paymentCompleted) return;
-    
+
     print('🎉 Payment completed! Closing sheet...');
     _paymentCompleted = true;
-    
+
     // Close the sheet first, then call the callback
     if (mounted) {
       Navigator.of(context).pop();
@@ -256,7 +258,7 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
                 WebViewWidget(controller: _controller),
                 if (_isLoading)
                   const Center(
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator.adaptive(),
                   ),
               ],
             ),
@@ -266,4 +268,3 @@ class _PaymentWebViewSheetState extends State<PaymentWebViewSheet> {
     );
   }
 }
-

@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationFormData extends ChangeNotifier {
+  static const String _prefsKey = 'application_form_data';
+
   // Step 1 data
   String? nin;
   String? fullName;
@@ -15,7 +19,7 @@ class ApplicationFormData extends ChangeNotifier {
   String? phoneNumber;
   String? residentialAddress;
   String? landmark;
-  String? letterFromTraditionalRulerPath; // File path
+  String? letterFromTraditionalRulerPath; // File path - not persisted
 
   // Step 3 data
   String? paymentMethod;
@@ -24,6 +28,62 @@ class ApplicationFormData extends ChangeNotifier {
 
   // Application ID after creation
   String? applicationId;
+
+  ApplicationFormData() {
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_prefsKey);
+      if (jsonString != null) {
+        final Map<String, dynamic> data = json.decode(jsonString);
+        nin = data['nin'];
+        fullName = data['fullName'];
+        dateOfBirth = data['dateOfBirth'];
+        stateValue = data['stateValue'];
+        localGovernment = data['localGovernment'];
+        village = data['village'];
+        email = data['email'];
+        phoneNumber = data['phoneNumber'];
+        residentialAddress = data['residentialAddress'];
+        landmark = data['landmark'];
+        paymentMethod = data['paymentMethod'];
+        applicationId = data['applicationId'];
+        applicationFee = data['applicationFee'] != null ? data['applicationFee'] as int : null;
+        verificationFee = data['verificationFee'] != null ? data['verificationFee'] as int : null;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading application form data: $e');
+    }
+  }
+
+  Future<void> _saveToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> data = {
+        'nin': nin,
+        'fullName': fullName,
+        'dateOfBirth': dateOfBirth,
+        'stateValue': stateValue,
+        'localGovernment': localGovernment,
+        'village': village,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'residentialAddress': residentialAddress,
+        'landmark': landmark,
+        'paymentMethod': paymentMethod,
+        'applicationId': applicationId,
+        'applicationFee': applicationFee,
+        'verificationFee': verificationFee,
+      };
+      await prefs.setString(_prefsKey, json.encode(data));
+    } catch (e) {
+      debugPrint('Error saving application form data: $e');
+    }
+  }
 
   void setStep1Data({
     required String nin,
@@ -40,6 +100,7 @@ class ApplicationFormData extends ChangeNotifier {
     this.localGovernment = localGovernment;
     this.village = village;
     notifyListeners();
+    _saveToPrefs();
   }
 
   void setStep2Data({
@@ -55,14 +116,23 @@ class ApplicationFormData extends ChangeNotifier {
     this.landmark = landmark;
     this.letterFromTraditionalRulerPath = letterFromTraditionalRulerPath;
     notifyListeners();
+    _saveToPrefs();
   }
 
   void setApplicationId(String id) {
     applicationId = id;
     notifyListeners();
+    _saveToPrefs();
   }
 
-  void reset() {
+  void setFees({int? applicationFee, int? verificationFee}) {
+    this.applicationFee = applicationFee;
+    this.verificationFee = verificationFee;
+    notifyListeners();
+    _saveToPrefs();
+  }
+
+  void reset() async {
     nin = null;
     fullName = null;
     dateOfBirth = null;
@@ -79,6 +149,14 @@ class ApplicationFormData extends ChangeNotifier {
     applicationFee = null;
     verificationFee = null;
     notifyListeners();
+    
+    // Clear from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefsKey);
+    } catch (e) {
+      debugPrint('Error clearing application form data: $e');
+    }
   }
 }
 

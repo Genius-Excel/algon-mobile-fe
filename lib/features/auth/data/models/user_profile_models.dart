@@ -8,14 +8,14 @@ class UserProfile {
   @JsonKey(name: 'last_login')
   final String? lastLogin;
   @JsonKey(name: 'is_superuser')
-  final bool isSuperuser;
+  final bool? isSuperuser;
   final String username;
   @JsonKey(name: 'first_name')
   final String firstName;
   @JsonKey(name: 'last_name')
   final String lastName;
   @JsonKey(name: 'is_staff')
-  final bool isStaff;
+  final bool? isStaff;
   @JsonKey(name: 'is_active')
   final bool isActive;
   @JsonKey(name: 'date_joined')
@@ -33,18 +33,18 @@ class UserProfile {
   @JsonKey(name: 'account_status')
   final String accountStatus;
   final String role;
-  final List<dynamic> groups;
+  final List<dynamic>? groups;
   @JsonKey(name: 'user_permissions')
-  final List<dynamic> userPermissions;
+  final List<dynamic>? userPermissions;
 
   const UserProfile({
     required this.id,
     this.lastLogin,
-    required this.isSuperuser,
+    this.isSuperuser,
     required this.username,
     required this.firstName,
     required this.lastName,
-    required this.isStaff,
+    this.isStaff,
     required this.isActive,
     required this.dateJoined,
     required this.email,
@@ -55,8 +55,8 @@ class UserProfile {
     this.nin,
     required this.accountStatus,
     required this.role,
-    required this.groups,
-    required this.userPermissions,
+    this.groups,
+    this.userPermissions,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) =>

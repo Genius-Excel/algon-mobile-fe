@@ -121,14 +121,16 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
 
-                          Text(
-                            profile.fullName,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
+                          if (profile.firstName.isNotEmpty &&
+                              profile.lastName.isNotEmpty)
+                            Text(
+                              profile.fullName,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1F2937),
+                              ),
                             ),
-                          ),
                           const SizedBox(height: 8),
                           // Email
                           Text(
@@ -165,10 +167,10 @@ class ProfileScreen extends ConsumerWidget {
                                 if (profile.phoneNumber != null &&
                                     profile.phoneNumber!.isNotEmpty)
                                   const Divider(height: 24),
-                                _InfoRow(
-                                  label: 'Username',
-                                  value: profile.username,
-                                ),
+                                // _InfoRow(
+                                //   label: 'Username',
+                                //   value: profile.username,
+                                // ),
                                 // const Divider(height: 24),
                                 // _InfoRow(
                                 //   label: 'Account Status',
@@ -178,16 +180,16 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          // Edit Profile button
-                          CustomButton(
-                            text: 'Edit Profile',
-                            variant: ButtonVariant.outline,
-                            backgroundColor: const Color(0xFFF9FAFB),
-                            textColor: const Color(0xFF1F2937),
-                            onPressed: () {},
-                            isFullWidth: true,
-                          ),
-                          const SizedBox(height: 16),
+                          // // Edit Profile button
+                          // CustomButton(
+                          //   text: 'Edit Profile',
+                          //   variant: ButtonVariant.outline,
+                          //   backgroundColor: const Color(0xFFF9FAFB),
+                          //   textColor: const Color(0xFF1F2937),
+                          //   onPressed: () {},
+                          //   isFullWidth: true,
+                          // ),
+                          // const SizedBox(height: 16),
                           // Logout button
                           CustomButton(
                             text: 'Logout',

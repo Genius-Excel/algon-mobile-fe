@@ -248,6 +248,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               app.createdAt,
                             ),
                             status: status.label,
+                            applicationId: app.id,
                           ),
                         );
                       }),

@@ -10,6 +10,7 @@ import '../../../../core/service_exceptions/api_exceptions.dart';
 import '../../../../core/service_result/api_result.dart';
 import '../models/application_list_models.dart';
 import '../models/certificate_application_models.dart';
+import '../models/certificate_models.dart';
 import '../models/states_models.dart' as states_models;
 import '../models/update_application_models.dart';
 import 'application_repository.dart';
@@ -174,7 +175,6 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       print('   Application ID: $applicationId');
       print('   Application Type: $applicationType');
 
- 
       final apiClient = ref.read(apiClientProvider);
 
       final response = await apiClient.get(
@@ -199,7 +199,7 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
         application = ApplicationItem.fromJson(responseData);
       }
 
-       return Success(data: application);
+      return Success(data: application);
     } on DioException catch (e) {
       print('❌ Get Application Details Error:');
       print('   Type: ${e.type}');
@@ -270,9 +270,63 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
     }
   }
 
+  @override
+  Future<ApiResult<ApplicationItem>> getMyApplicationDetails({
+    required String applicationId,
+    required String applicationType,
+  }) async {
+    try {
+      print('🚀 Get My Application Details API Call:');
+      print('   Application ID: $applicationId');
+      print('   Application Type: $applicationType');
 
+      final apiClient = ref.read(apiClientProvider);
 
+      final response = await apiClient.get(
+        ApiEndpoints.myApplicationDetail(applicationId),
+        queryParameters: {'type': applicationType},
+      );
 
+      print(
+          '✅ Get My Application Details Response Status: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      final responseData = response.data as Map<String, dynamic>;
+
+      // Parse the response
+      ApplicationItem application;
+
+      if (responseData.containsKey('data')) {
+        // Response has {message, data} structure
+        application = ApplicationItem.fromJson(responseData['data']);
+      } else {
+        // Direct application object
+        application = ApplicationItem.fromJson(responseData);
+      }
+
+      return Success(data: application);
+    } on DioException catch (e) {
+      print('❌ Get My Application Details Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Get My Application Details Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: -1,
+      );
+    }
+  }
 
   @override
   Future<ApiResult<void>> verifyNin(String id, String type) async {
@@ -466,6 +520,38 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       );
     } catch (e, stackTrace) {
       print('❌ Unexpected Get All States Error:');
+      print('   Error: $e');
+      print('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApiResult<CertificateListResponse>> getMyCertificates() async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+
+      final Response<dynamic> response =
+          await apiClient.get(ApiEndpoints.myCertificates);
+
+      final responseData = response.data as Map<String, dynamic>;
+
+      return Success(
+        data: CertificateListResponse.fromJson(responseData),
+      );
+    } on DioException catch (e) {
+      print('❌ Get My Certificates Error:');
+      print('   Type: ${e.type}');
+      print('   Message: ${e.message}');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+
+      return ApiFailure(
+        error: ApiExceptions.getDioException(e)!,
+        statusCode: e.response?.statusCode ?? -1,
+      );
+    } catch (e, stackTrace) {
+      print('❌ Unexpected Get My Certificates Error:');
       print('   Error: $e');
       print('   StackTrace: $stackTrace');
       rethrow;

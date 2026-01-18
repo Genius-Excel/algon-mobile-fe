@@ -13,6 +13,9 @@ class ApiEndpoints {
   static String updateCertificateApplication(String applicationId) =>
       '/certificates/applications/apply/$applicationId';
   static const String myApplications = '/certificates/my-applications';
+  static String myApplicationDetail(String applicationId) =>
+      '/certificates/my-applications/$applicationId';
+  static const String myCertificates = '/my-certificates';
 
   static const String digitizationApplication =
       '/certificate/digitizations/apply';

@@ -6,9 +6,11 @@ import 'package:algon_mobile/core/enums/application_status.dart';
 import 'package:algon_mobile/core/enums/payment_status.dart';
 import 'package:algon_mobile/features/application/data/models/application_list_models.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
-import 'package:algon_mobile/features/admin/data/repository/admin_repository.dart';
+import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
+import 'package:shimmer/shimmer.dart';
 
 @RoutePage()
 class ApplicationDetailScreen extends ConsumerStatefulWidget {
@@ -39,25 +41,30 @@ class _ApplicationDetailScreenState
     setState(() => _isLoading = true);
 
     try {
-      final adminRepo = ref.read(adminRepositoryProvider);
+      final applicationRepo = ref.read(applicationRepositoryProvider);
 
       // Try both application types
       final applicationTypes = ['certificate', 'digitization'];
 
       for (final appType in applicationTypes) {
-        final result = await adminRepo.getApplicationDetails(
+        print('🔍 Fetching application details for type: $appType');
+
+        final result = await applicationRepo.getMyApplicationDetails(
           applicationId: widget.id,
           applicationType: appType,
         );
 
         result.when(
           success: (application) {
+            print('✅ Successfully fetched application details');
             setState(() {
               _application = application;
               _isLoading = false;
             });
           },
           apiFailure: (error, statusCode) {
+            print(
+                '❌ Failed to fetch application details: $error (Status: $statusCode)');
             if (appType == applicationTypes.last && _isLoading) {
               setState(() => _isLoading = false);
               if (mounted) {
@@ -74,6 +81,7 @@ class _ApplicationDetailScreenState
         if (!_isLoading) break;
       }
     } catch (e) {
+      print('❌ Unexpected error: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         Toast.error('An unexpected error occurred', context);
@@ -109,10 +117,13 @@ class _ApplicationDetailScreenState
                       child: CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: const Color(0xFFF9FAFB),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: double.infinity,
+                            height: 120,
+                            color: Colors.white,
                           ),
                         ),
                         errorWidget: (context, url, error) => Container(
@@ -204,7 +215,7 @@ class _ApplicationDetailScreenState
   void _showFullScreenImage(
       BuildContext context, String? imageUrl, String label) {
     if (imageUrl == null || imageUrl.isEmpty) return;
-    
+
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.9),
@@ -233,13 +244,13 @@ class _ApplicationDetailScreenState
                           fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator.adaptive(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                color: Colors.white,
                               ),
                             );
                           },
@@ -283,7 +294,8 @@ class _ApplicationDetailScreenState
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 28),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -327,7 +339,7 @@ class _ApplicationDetailScreenState
             backgroundColor: AppColors.gradientStart,
             foregroundColor: Colors.white,
           ),
-          body: const Center(child: CircularProgressIndicator()),
+          body: const ShimmerApplicationDetailScreen(),
         ),
       );
     }
@@ -600,7 +612,8 @@ class _AdditionalInfoCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _InfoRow(label: 'Date of Birth', value: application.dateOfBirth ?? 'N/A'),
+          _InfoRow(
+              label: 'Date of Birth', value: application.dateOfBirth ?? 'N/A'),
           const Divider(),
           _InfoRow(label: 'Phone Number', value: application.phoneNumber),
           const Divider(),
@@ -620,9 +633,7 @@ class _AdditionalInfoCard extends StatelessWidget {
             _InfoRow(label: 'Landmark', value: application.landmark!),
           ],
           const Divider(),
-          _InfoRow(
-              label: 'State',
-              value: application.state.name),
+          _InfoRow(label: 'State', value: application.state.name),
           const Divider(),
           _InfoRow(
               label: 'Local Government',
@@ -636,7 +647,8 @@ class _AdditionalInfoCard extends StatelessWidget {
             const Divider(),
             _InfoRow(
                 label: 'Date Approved',
-                value: DateFormatter.formatDisplayDate(application.approvedAt ?? '')),
+                value: DateFormatter.formatDisplayDate(
+                    application.approvedAt ?? '')),
           ],
           if (application.remarks != null &&
               application.remarks!.isNotEmpty) ...[

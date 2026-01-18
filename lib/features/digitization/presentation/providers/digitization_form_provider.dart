@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DigitizationFormData extends ChangeNotifier {
+  static const String _prefsKey = 'digitization_form_data';
+
   // Step 1 data
   String? nin;
   String? email;
@@ -9,11 +13,11 @@ class DigitizationFormData extends ChangeNotifier {
   String? stateValue;
   String? localGovernment;
   String? fullName;
-  String? ninSlipFilePath;
-  String? profilePhotoFilePath;
+  String? ninSlipFilePath; // File path - not persisted
+  String? profilePhotoFilePath; // File path - not persisted
 
   // Step 2 data
-  String? certificateFilePath;
+  String? certificateFilePath; // File path - not persisted
   String? certificateReferenceNumber;
 
   // Step 3 data
@@ -24,6 +28,54 @@ class DigitizationFormData extends ChangeNotifier {
   
   // Fee information
   int? digitizationFee;
+
+  DigitizationFormData() {
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_prefsKey);
+      if (jsonString != null) {
+        final Map<String, dynamic> data = json.decode(jsonString);
+        nin = data['nin'];
+        email = data['email'];
+        phoneNumber = data['phoneNumber'];
+        stateValue = data['stateValue'];
+        localGovernment = data['localGovernment'];
+        fullName = data['fullName'];
+        certificateReferenceNumber = data['certificateReferenceNumber'];
+        paymentMethod = data['paymentMethod'];
+        applicationId = data['applicationId'];
+        digitizationFee = data['digitizationFee'] != null ? data['digitizationFee'] as int : null;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading digitization form data: $e');
+    }
+  }
+
+  Future<void> _saveToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> data = {
+        'nin': nin,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'stateValue': stateValue,
+        'localGovernment': localGovernment,
+        'fullName': fullName,
+        'certificateReferenceNumber': certificateReferenceNumber,
+        'paymentMethod': paymentMethod,
+        'applicationId': applicationId,
+        'digitizationFee': digitizationFee,
+      };
+      await prefs.setString(_prefsKey, json.encode(data));
+    } catch (e) {
+      debugPrint('Error saving digitization form data: $e');
+    }
+  }
 
   void setStep1Data({
     required String nin,
@@ -44,6 +96,7 @@ class DigitizationFormData extends ChangeNotifier {
     if (ninSlipFilePath != null) this.ninSlipFilePath = ninSlipFilePath;
     if (profilePhotoFilePath != null) this.profilePhotoFilePath = profilePhotoFilePath;
     notifyListeners();
+    _saveToPrefs();
   }
 
   void setStep2Data({
@@ -53,19 +106,22 @@ class DigitizationFormData extends ChangeNotifier {
     if (certificateFilePath != null) this.certificateFilePath = certificateFilePath;
     if (certificateReferenceNumber != null) this.certificateReferenceNumber = certificateReferenceNumber;
     notifyListeners();
+    _saveToPrefs();
   }
 
   void setApplicationId(String id) {
     applicationId = id;
     notifyListeners();
+    _saveToPrefs();
   }
 
   void setDigitizationFee(int? fee) {
     digitizationFee = fee;
     notifyListeners();
+    _saveToPrefs();
   }
 
-  void reset() {
+  void reset() async {
     nin = null;
     email = null;
     phoneNumber = null;
@@ -80,6 +136,14 @@ class DigitizationFormData extends ChangeNotifier {
     applicationId = null;
     digitizationFee = null;
     notifyListeners();
+    
+    // Clear from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefsKey);
+    } catch (e) {
+      debugPrint('Error clearing digitization form data: $e');
+    }
   }
 }
 

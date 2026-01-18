@@ -120,8 +120,10 @@ class _NewApplicationStep2ScreenState
           );
 
           // Store fees for Step 3
-          formData.applicationFee = response.data.fee.applicationFee?.toInt();
-          formData.verificationFee = response.data.verificationFee?.toInt();
+          formData.setFees(
+            applicationFee: response.data.fee.applicationFee?.toInt(),
+            verificationFee: response.data.verificationFee?.toInt(),
+          );
 
           if (mounted) {
             Toast.success(response.message, context);

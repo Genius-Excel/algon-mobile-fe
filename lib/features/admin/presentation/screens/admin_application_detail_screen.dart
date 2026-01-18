@@ -10,7 +10,8 @@ import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/admin/data/repository/admin_repository.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
+import 'package:shimmer/shimmer.dart';
 
 @RoutePage()
 class AdminApplicationDetailScreen extends ConsumerStatefulWidget {
@@ -81,7 +82,7 @@ class _AdminApplicationDetailScreenState
         // If we successfully got the application, break the loop
         if (!_isLoading) break;
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() => _isLoading = false);
       Toast.error('An unexpected error occurred: $e', context);
     }
@@ -192,12 +193,13 @@ class _AdminApplicationDetailScreenState
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator.adaptive(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: double.infinity,
+                              height: 100,
+                              color: Colors.white,
                             ),
                           );
                         },
@@ -325,13 +327,13 @@ class _AdminApplicationDetailScreenState
                           fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator.adaptive(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                color: Colors.white,
                               ),
                             );
                           },
@@ -443,7 +445,7 @@ class _AdminApplicationDetailScreenState
             backgroundColor: AppColors.gradientStart,
             foregroundColor: Colors.white,
           ),
-          body: const Center(child: CircularProgressIndicator()),
+          body: const ShimmerApplicationDetailScreen(),
         ),
       );
     }

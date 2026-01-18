@@ -10,9 +10,14 @@ import 'package:algon_mobile/shared/widgets/shimmer_widget.dart';
 import 'package:algon_mobile/shared/widgets/toast.dart';
 import 'package:algon_mobile/features/application/data/repository/application_repository.dart';
 import 'package:algon_mobile/features/application/data/models/application_list_models.dart';
+import 'package:algon_mobile/features/application/data/models/certificate_models.dart';
 import 'package:algon_mobile/core/service_exceptions/api_exceptions.dart';
 import 'package:algon_mobile/core/utils/date_formatter.dart';
 import 'package:algon_mobile/core/router/router.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:algon_mobile/core/dependency_injection/di_providers.dart';
 
 @RoutePage(name: 'Tracking')
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -23,7 +28,7 @@ class TrackingScreen extends ConsumerStatefulWidget {
 }
 
 class _TrackingScreenState extends ConsumerState<TrackingScreen> {
-  int _selectedTab = 0; // 0 = Certificate, 1 = Digitization
+  int _selectedTab = 0; // 0 = Certificate, 1 = Digitization, 2 = Certificates
 
   // Certificate applications
   bool _isLoadingCertificate = true;
@@ -39,6 +44,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   String? _nextUrlDigitization;
   final ScrollController _digitizationScrollController = ScrollController();
 
+  // Certificates
+  bool _isLoadingCertificates = true;
+  List<CertificateItem> _certificates = [];
+  final ScrollController _certificatesScrollController = ScrollController();
+
   static const int _pageSize = 10;
 
   @override
@@ -46,14 +56,17 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     super.initState();
     _certificateScrollController.addListener(_onCertificateScroll);
     _digitizationScrollController.addListener(_onDigitizationScroll);
+    _certificatesScrollController.addListener(_onCertificatesScroll);
     _fetchCertificateApplications();
     _fetchDigitizationApplications();
+    _fetchCertificates();
   }
 
   @override
   void dispose() {
     _certificateScrollController.dispose();
     _digitizationScrollController.dispose();
+    _certificatesScrollController.dispose();
     super.dispose();
   }
 
@@ -73,6 +86,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         !_isLoadingMoreDigitization) {
       _loadMoreDigitizationApplications();
     }
+  }
+
+  void _onCertificatesScroll() {
+    // Certificates don't have pagination, so no action needed
   }
 
   Future<void> _fetchCertificateApplications({bool refresh = false}) async {
@@ -313,6 +330,111 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     }
   }
 
+  Future<void> _fetchCertificates({bool refresh = false}) async {
+    if (refresh) {
+      _certificates.clear();
+    }
+
+    setState(() {
+      _isLoadingCertificates = true;
+    });
+
+    try {
+      final applicationRepo = ref.read(applicationRepositoryProvider);
+      final result = await applicationRepo.getMyCertificates();
+
+      result.when(
+        success: (response) {
+          if (mounted) {
+            setState(() {
+              _certificates = List<CertificateItem>.from(response.data)
+                ..sort((a, b) {
+                  try {
+                    final dateA = DateTime.parse(a.createdAt);
+                    final dateB = DateTime.parse(b.createdAt);
+                    return dateB.compareTo(dateA);
+                  } catch (e) {
+                    return 0;
+                  }
+                });
+              _isLoadingCertificates = false;
+            });
+          }
+        },
+        apiFailure: (error, statusCode) {
+          if (mounted) {
+            setState(() {
+              _isLoadingCertificates = false;
+            });
+            if (error is ApiExceptions) {
+              Toast.apiError(error, context);
+            } else {
+              Toast.error(error.toString(), context);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingCertificates = false;
+      });
+      if (mounted) {
+        Toast.error('An unexpected error occurred: ${e.toString()}', context);
+      }
+    }
+  }
+
+  Future<void> _downloadCertificate(CertificateItem certificate) async {
+    if (certificate.filePath == null || certificate.filePath!.isEmpty) {
+      Toast.error('Certificate file not available', context);
+      return;
+    }
+
+    try {
+      final dio = ref.read(dioProvider);
+      final tempDir = await getTemporaryDirectory();
+      final fileName = '${certificate.certificateNumber}.pdf';
+      final filePath = '${tempDir.path}/$fileName';
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator.adaptive(),
+        ),
+      );
+
+      await dio.download(
+        certificate.filePath!,
+        filePath,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      // Hide loading indicator
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Share the file
+      if (mounted) {
+        await Share.shareXFiles(
+          [XFile(filePath)],
+          text: 'Certificate: ${certificate.certificateNumber}',
+        );
+        Toast.success('Certificate downloaded', context);
+      }
+    } catch (e) {
+      // Hide loading indicator
+      if (mounted) {
+        Navigator.of(context).pop();
+        Toast.error('Failed to download certificate: ${e.toString()}', context);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,8 +470,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildTab('Certificate', 0),
+                        _buildTab('Certification', 0),
                         _buildTab('Digitization', 1),
+                        _buildTab('Certificates', 2),
                       ],
                     ),
                     // Applications list
@@ -357,7 +480,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       child: Container(
                         color: const Color(0xFFF9FAFB),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 16),
+                          horizontal: 15,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -365,7 +489,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                             Expanded(
                               child: _selectedTab == 0
                                   ? _buildCertificateList()
-                                  : _buildDigitizationList(),
+                                  : _selectedTab == 1
+                                      ? _buildDigitizationList()
+                                      : _buildCertificatesList(),
                             ),
                           ],
                         ),
@@ -458,7 +584,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             return const Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(
-                child: CircularProgressIndicator(),
+                child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator.adaptive()),
               ),
             );
           }
@@ -537,6 +666,175 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCertificatesList() {
+    if (_isLoadingCertificates && _certificates.isEmpty) {
+      return ListView.builder(
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < 4 ? 16 : 0),
+            child: const ShimmerApplicationCard(),
+          );
+        },
+      );
+    }
+
+    if (_certificates.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No certificates found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchCertificates(refresh: true),
+      child: ListView.builder(
+        controller: _certificatesScrollController,
+        itemCount: _certificates.length,
+        itemBuilder: (context, index) {
+          final certificate = _certificates[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index < _certificates.length - 1 ? 16 : 0,
+            ),
+            child: _CertificateCard(
+              certificate: certificate,
+              onDownload: () => _downloadCertificate(certificate),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CertificateCard extends StatelessWidget {
+  final CertificateItem certificate;
+  final VoidCallback onDownload;
+
+  const _CertificateCard({
+    required this.certificate,
+    required this.onDownload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final canDownload = certificate.isDownloadable == true &&
+        certificate.filePath != null &&
+        certificate.filePath!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      certificate.certificateType.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    Text(
+                        "Certificate ID : ${certificate.certificateNumber.toUpperCase()}"),
+                    SizedBox(
+                      height: 4,
+                    ),
+                    Text(
+                      'Issued Date: ${DateFormatter.formatDisplayDate(certificate.issueDate)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    // if (certificate.expiryDate != null) ...[
+                    //   const SizedBox(height: 4),
+                    //   Text(
+                    //     'Expiry Date: ${DateFormatter.formatDisplayDate(certificate.expiryDate!)}',
+                    //     style: const TextStyle(
+                    //       fontSize: 12,
+                    //       color: Color(0xFF6B7280),
+                    //     ),
+                    //   ),
+                    // ],
+                  ],
+                ),
+              ),
+              if (certificate.isRevoked)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cancel, size: 16, color: Colors.red),
+                      SizedBox(width: 6),
+                      Text(
+                        'Revoked',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              CustomButton(
+                backgroundColor: canDownload ? Colors.greenAccent : Colors.grey,
+                text: 'Download',
+                iconData: Icons.download,
+                iconPosition: IconPosition.left,
+                onPressed: onDownload,
+                variant: ButtonVariant.primary,
+                fontSize: 14,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }

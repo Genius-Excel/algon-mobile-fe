@@ -9,11 +9,11 @@ part of 'user_profile_models.dart';
 UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => UserProfile(
       id: json['id'] as String,
       lastLogin: json['last_login'] as String?,
-      isSuperuser: json['is_superuser'] as bool,
+      isSuperuser: json['is_superuser'] as bool?,
       username: json['username'] as String,
       firstName: json['first_name'] as String,
       lastName: json['last_name'] as String,
-      isStaff: json['is_staff'] as bool,
+      isStaff: json['is_staff'] as bool?,
       isActive: json['is_active'] as bool,
       dateJoined: json['date_joined'] as String,
       email: json['email'] as String,
@@ -24,8 +24,8 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => UserProfile(
       nin: json['nin'] as String?,
       accountStatus: json['account_status'] as String,
       role: json['role'] as String,
-      groups: json['groups'] as List<dynamic>,
-      userPermissions: json['user_permissions'] as List<dynamic>,
+      groups: json['groups'] as List<dynamic>?,
+      userPermissions: json['user_permissions'] as List<dynamic>?,
     );
 
 Map<String, dynamic> _$UserProfileToJson(UserProfile instance) =>
